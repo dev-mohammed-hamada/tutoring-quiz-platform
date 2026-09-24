@@ -13,9 +13,10 @@
 
 ## Execution status — read this first
 
-**Updated 2026-09-25, Phase 4 code complete.** Tasks 1–17 are done; 1–13 are merged to `main`. The
-suite is 188 API tests (15 files) plus 29 web tests (6 files), clean `tsc` and a clean Vite build.
-Tasks 18–19 remain, and one verification gap below must close before the phase merges. Work happens on `feat/v1`; merge to `main` with `--no-ff` at each phase boundary so `main`
+**Updated 2026-09-25, Task 18 done.** Tasks 1–18 are done; 1–17 are merged to `main`. The suite is
+188 API tests, 29 web tests and 9 end-to-end tests at a 375px viewport, with a clean `tsc` and Vite
+build. Only Task 19 (delivery documentation) remains — and its README, DECISIONS and AI_USAGE are
+already written, leaving the Docker verification in its Step 5. Work happens on `feat/v1`; merge to `main` with `--no-ff` at each phase boundary so `main`
 is always submittable.
 
 ### Running locally without Docker
@@ -91,17 +92,14 @@ upserts by `(question_id, position)` and clears `is_correct` first, which also k
 
 ### Still open
 
-- **The staff screens have not been looked at in a browser.** Tasks 16 and 17 are covered by tests
-  (`web/test/editor.test.tsx` and the API suite) but not by eye: the teacher home, the editor, the
-  report table and both principal screens. Sign in as `principal` — that role reaches every one of
-  them, since `/teach` is staff-scoped — and walk the screens at a narrow width. The student flow
-  was checked this way and it found three real problems that tests had not.
+- **`docker compose up` has still never been run**, and Task 19's Step 5 cannot be done without it.
+  Docker Desktop is not installed on this machine. Everything else about the delivery is verified;
+  this is the last unverified claim in the README, and it is the reviewer's first command.
 
 - **`quiz_dev` now has a submitted attempt for `10A-002` on القراءة والفهم**, created by Task 15's
   Step 5 walkthrough. The one-attempt rule means that student cannot sit it again; recreate
   `quiz_dev` to reseed if you want a clean student for a demo.
 
-- `docker compose up` has never been run. It must be, from a clean clone, before submission.
 - `data/` quiz content is machine-checked (15 questions, 20 marks, answers spread across a–d, no
   duplicate options). The Arabic wording has not been reviewed by a native speaker.
 
@@ -3093,7 +3091,7 @@ git commit -m "feat: principal administration screens"
 - Create: `playwright.config.ts`, `e2e/student.spec.ts`, `e2e/teacher.spec.ts`, `e2e/rtl.spec.ts`
 - Create: `.github/workflows/ci.yml`
 
-- [ ] **Step 1: Playwright config at phone width**
+- [x] **Step 1: Playwright config at phone width**
 
 ```ts
 import { defineConfig, devices } from '@playwright/test';
@@ -3104,7 +3102,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 2: Write the three specs**
+- [x] **Step 2: Write the three specs**
 
 `student.spec.ts` — log in as a seeded student, open the Arabic quiz, answer every question, finish, assert a score is shown and that the answers are not yet revealed.
 
@@ -3122,12 +3120,12 @@ test('the interface mirrors when switched to Arabic, with no horizontal scroll',
 });
 ```
 
-- [ ] **Step 3: Run them**
+- [x] **Step 3: Run them**
 
 Run: `docker compose up -d && npx playwright test`
 Expected: 3 passing.
 
-- [ ] **Step 4: CI**
+- [x] **Step 4: CI**
 
 `.github/workflows/ci.yml` — Postgres service container, `npm ci`, `npm test`, and the logical-properties grep as a hard gate:
 ```yaml
@@ -3138,7 +3136,7 @@ Expected: 3 passing.
     fi
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
