@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { loginBody } from '@quiz/shared';
+import { loginBody, updateMeBody } from '@quiz/shared';
 import { pool } from '../db/pool.js';
 import { verifyPassword, burnVerifyTime } from '../auth/password.js';
 import { issueSession, revokeSession, SESSION_COOKIE, SESSION_TTL_MS } from '../auth/session.js';
@@ -51,4 +51,14 @@ authRoutes.post('/auth/logout', async (req, res) => {
 
 authRoutes.get('/me', requireAuth, (req, res) => {
   res.json(serializeMe(req.user!));
+});
+
+/**
+ * The language toggle writes through to the row rather than to the session, so
+ * the choice is still there on the next device the student signs in from.
+ */
+authRoutes.patch('/me', requireAuth, validate({ body: updateMeBody }), async (req, res) => {
+  const { locale } = req.body as import('@quiz/shared').UpdateMeBody;
+  await pool.query(`UPDATE users SET locale = $1 WHERE id = $2`, [locale, req.user!.id]);
+  res.status(204).end();
 });

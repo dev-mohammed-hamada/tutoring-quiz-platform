@@ -13,9 +13,10 @@
 
 ## Execution status — read this first
 
-**Updated 2026-09-25, end of Phase 3.** Tasks 1–13 are done and merged to `main` (165 API tests,
-13 files, clean `tsc`). Phases 4–5 (Tasks 14–19) remain. Work happens on `feat/v1`; merge to `main`
-with `--no-ff` at each phase boundary so `main` is always submittable.
+**Updated 2026-09-25, Task 14 done.** Tasks 1–14 are done; 1–13 are merged to `main`. The suite is
+174 API tests (14 files) plus 10 web tests (2 files), clean `tsc` and a clean Vite build. Tasks 15–19
+remain. Work happens on `feat/v1`; merge to `main` with `--no-ff` at each phase boundary so `main`
+is always submittable.
 
 ### Running locally without Docker
 
@@ -23,10 +24,14 @@ Docker is not installed on the dev machine yet. A local Postgres 14 runs on 5432
 
 ```bash
 export DATABASE_URL=postgres://mohammedhamada@localhost:5432/quiz_dev   # dev
-npm test -w api            # tests always use quiz_test via api/test/setup.ts
-npm run build              # tsc; Vitest does NOT typecheck, so run this before every commit
-npm run dev                # tsx watch; runs migrate + seed + sweeper on boot
+npm test                   # api (quiz_test via api/test/setup.ts) + web
+npm run build              # tsc + Vite; Vitest does NOT typecheck, so run this before every commit
+npm run dev                # API on :3000 (migrate + seed + sweeper) and Vite on :5173
 ```
+
+The API also serves the built SPA from `web/dist` when it exists, so `npm run build && npm start`
+gives the production shape on :3000 alone. `web/dist` is resolved from the API module's own
+location, not from `process.cwd()`, because the three ways of starting it have three cwds.
 
 The API does not load `.env` files; export `DATABASE_URL` yourself. `compose` publishes Postgres on
 host **5433**, not 5432.
@@ -44,8 +49,13 @@ Test fixtures in `api/test/helpers/world.ts` use different codes (`teacher-samir
 
 ### Deviations from this plan that Phase 4 must respect
 
-- **Workspaces are `["shared", "api"]` only.** Task 14 must add `"web"` to the root `workspaces`,
-  the root `build` and `dev` scripts, and the `Dockerfile` (build stage + `COPY --from=build /app/web/dist web/dist`).
+- ~~Workspaces are `["shared", "api"]` only.~~ **Done in Task 14:** `web` is in the root
+  `workspaces`, in `build`/`dev`/`test`, and in both Dockerfile stages.
+- **`web` pins Vite 5, not 6.** Vitest 2 hoists Vite 5 to the root; a second copy at Vite 6 made
+  `@vitejs/plugin-react` typecheck against the wrong one. One copy in the tree, deliberately.
+- **Read `window.localStorage`, never the bare `localStorage` global.** Node 20+ ships its own
+  experimental one that shadows jsdom's under Vitest and has no `getItem`. `web/test/setup.ts`
+  restores a real Storage for tests.
 - **The implemented response shapes are the contract, not the plan's sketches.** Read
   `api/src/serializers/*.ts` and `api/src/routes/*.ts` before building a screen. In particular:
   student quiz `state` is one of `available | not_open_yet | closed | in_progress | expired | submitted`;
@@ -59,7 +69,7 @@ Test fixtures in `api/test/helpers/world.ts` use different codes (`teacher-samir
 
 | Gap | Needed by | Shape |
 |---|---|---|
-| `PATCH /api/me` `{ locale }` | Task 14 language toggle | persists `users.locale`; 204 |
+| ~~`PATCH /api/me` `{ locale }`~~ | ~~Task 14~~ | **Done in Task 14.** `updateMeBody` in `shared`; 204 |
 | `GET /api/me/classes` | Task 16 class picker | teacher → assigned classes; principal → all |
 | `GET /api/quizzes/:id` (staff, scoped) | Task 16 editor | quiz + questions + options **with** `isCorrect` — staff only |
 | `PATCH /api/quizzes/:id` and `PUT /api/quizzes/:id/questions/:qid` | Task 16 editor | **Missed in Task 7.** Spec §5 lists it |
@@ -71,6 +81,10 @@ until that test is written against the new PUT.
 
 ### Still open
 
+- **Nobody has looked at the web app in a browser yet.** Task 14's Step 10 visual pass at 375px —
+  language toggle, full layout mirroring — was not performed: the browser tooling was unavailable
+  on the dev machine. The behaviour is covered by `web/test/login.test.tsx`, but the *look* is not.
+  Do this before Task 15 builds on the shell.
 - `docker compose up` has never been run. It must be, from a clean clone, before submission.
 - `data/` quiz content is machine-checked (15 questions, 20 marks, answers spread across a–d, no
   duplicate options). The Arabic wording has not been reviewed by a native speaker.
@@ -2647,7 +2661,7 @@ git commit -m "feat: principal administration with spreadsheet import"
   - `<Text as="p">{userGeneratedString}</Text>` — renders with `dir="auto"`. **Every user-generated string in the app goes through this component** (D-22).
   - `apiFetch<T>(path, init?): Promise<T>` — throws `ApiError { status, code }` on non-2xx, always `credentials: 'include'`.
 
-- [ ] **Step 1: Write the failing direction test**
+- [x] **Step 1: Write the failing direction test**
 
 `web/test/direction.test.tsx`:
 ```tsx
@@ -2685,12 +2699,12 @@ describe('Text', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 Run: `npm test -w web`
 Expected: FAIL — cannot resolve `DirectionProvider`.
 
-- [ ] **Step 3: Implement direction and text**
+- [x] **Step 3: Implement direction and text**
 
 `web/src/components/DirectionProvider.tsx`:
 ```tsx
@@ -2721,7 +2735,7 @@ export function Text({ as: As = 'span', children, ...rest }:
 }
 ```
 
-- [ ] **Step 4: Write the design tokens — logical properties only**
+- [x] **Step 4: Write the design tokens — logical properties only**
 
 `web/src/styles/tokens.css`:
 ```css
@@ -2777,7 +2791,7 @@ body {
 
 > **Enforcement:** add `grep -rnE '(margin|padding|border)-(left|right)|text-align:\s*(left|right)' web/src` to the CI script as a failing check. This is the rule that decays silently otherwise.
 
-- [ ] **Step 5: Set up i18n**
+- [x] **Step 5: Set up i18n**
 
 `web/src/i18n/index.ts`:
 ```ts
@@ -2809,7 +2823,7 @@ export default i18n;
 }
 ```
 
-- [ ] **Step 6: Format numbers and dates correctly**
+- [x] **Step 6: Format numbers and dates correctly**
 
 `web/src/i18n/format.ts`:
 ```ts
@@ -2828,7 +2842,7 @@ export const formatDateTime = (iso: string, locale: string) =>
     { timeZone: TZ, dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso));
 ```
 
-- [ ] **Step 7: Vite config with the dev proxy**
+- [x] **Step 7: Vite config with the dev proxy**
 
 `web/vite.config.ts`:
 ```ts
@@ -2843,7 +2857,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 8: Serve the SPA from the API in production**
+- [x] **Step 8: Serve the SPA from the API in production**
 
 Modify `api/src/app.ts` — after the API routes, before the error handler:
 ```ts
@@ -2859,17 +2873,17 @@ if (existsSync(webDist)) {
 }
 ```
 
-- [ ] **Step 9: Build the login page**
+- [x] **Step 9: Build the login page**
 
 `LoginPage.tsx`: a single card, one `login code` field, one `password` field, a submit button at `--tap` height, and `<LanguageToggle />` in the header. On success, route by role — student → `/quizzes`, teacher → `/teach`, principal → `/admin`. On 401 show one neutral message; never distinguish unknown user from wrong password.
 
-- [ ] **Step 10: Run the tests, then look at it**
+- [x] **Step 10: Run the tests, then look at it**  *(tests run; the browser pass at 375px is still outstanding — see Still open)*
 
 Run: `npm test -w web`
 Expected: PASS, 4 tests.
 Then: `npm run dev` and open `http://localhost:5173` at 375px width. Toggle the language and confirm the whole layout mirrors.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add -A

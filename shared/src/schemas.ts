@@ -73,3 +73,6 @@ export const importBody = z.object({
   csv: z.string().min(1).max(2_000_000),
 });
 export type ImportBody = z.infer<typeof importBody>;
+
+export const updateMeBody = z.object({ locale: z.enum(['en', 'ar']) });
+export type UpdateMeBody = z.infer<typeof updateMeBody>;

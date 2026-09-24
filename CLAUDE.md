@@ -21,10 +21,13 @@ npm only — the lockfile is `package-lock.json`. Workspaces: `shared`, `api`, a
 
 ```bash
 export DATABASE_URL=postgres://<user>@localhost:5432/quiz_dev   # the API does not read .env files
-npm run dev                   # API under tsx watch; migrates, seeds and starts the sweeper on boot
+npm run dev                   # API (tsx watch; migrates, seeds, sweeper) + Vite on :5173
+npm run dev:api               # just the API, when you only need the backend
 npm test -w api               # all API tests, always against quiz_test (see api/test/setup.ts)
 npm test -w api -- scoring    # one file by name; prefer this while iterating
-npm run build                 # tsc for shared and api
+npm test -w web               # jsdom component tests
+npm test                      # both workspaces
+npm run build                 # tsc for shared and api, then the Vite build for web
 npm run migrate
 npm run seed
 docker compose up --build     # app on :3000, Postgres published on host :5433
@@ -42,6 +45,10 @@ docker compose up --build     # app on :3000, Postgres published on host :5433
 - `api/src/domain/` — pure scoring and attempt-state logic: no I/O, no database, no clock reads (pass `now` in).
 - `api/src/routes/` thin handlers · `api/src/serializers/` response shapes · `api/src/db/` pool, migrations, scope predicate.
 - `data/*.csv` — sample data, in the same format the admin importer reads.
+- `web/src/components/Text.tsx` — every user-generated string renders through it, for `dir="auto"` (D-22).
+- `web/src/styles/` — tokens and base CSS. Logical properties only; `npm run build -w web` greps for
+  physical ones and fails, so a `margin-left` cannot reach a commit.
+- `web/src/api/client.ts` — the only place the app calls the API. Always `credentials: 'include'`.
 
 ## Domain rules that apply everywhere
 

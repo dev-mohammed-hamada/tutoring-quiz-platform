@@ -106,3 +106,39 @@ describe('GET /api/me', () => {
     expect(rows[0].id).toMatch(/^[0-9a-f]{64}$/);
   });
 });
+
+describe('PATCH /api/me', () => {
+  it('is 401 without a session', async () => {
+    expect((await request(app).patch('/api/me').send({ locale: 'en' })).status).toBe(401);
+  });
+
+  it('persists the chosen interface language and reports it back on /api/me', async () => {
+    const agent = request.agent(app);
+    await agent.post('/api/auth/login').send({ loginCode: '10A-001', password: 'pass1234' });
+
+    const res = await agent.patch('/api/me').send({ locale: 'en' });
+    expect(res.status).toBe(204);
+
+    // The preference outlives the request: it is on the row, not in the session.
+    const { rows } = await pool.query(`SELECT locale FROM users WHERE login_code='10A-001'`);
+    expect(rows[0].locale).toBe('en');
+    expect((await agent.get('/api/me')).body.locale).toBe('en');
+  });
+
+  it('survives a new session, which is the point of storing it', async () => {
+    const first = request.agent(app);
+    await first.post('/api/auth/login').send({ loginCode: '10A-001', password: 'pass1234' });
+    await first.patch('/api/me').send({ locale: 'en' });
+
+    const second = request.agent(app);
+    const login = await second.post('/api/auth/login').send({ loginCode: '10A-001', password: 'pass1234' });
+    expect(login.body.user.locale).toBe('en');
+  });
+
+  it('rejects a locale the app does not have translations for', async () => {
+    const agent = request.agent(app);
+    await agent.post('/api/auth/login').send({ loginCode: '10A-001', password: 'pass1234' });
+    expect((await agent.patch('/api/me').send({ locale: 'fr' })).status).toBe(400);
+    expect((await agent.patch('/api/me').send({})).status).toBe(400);
+  });
+});

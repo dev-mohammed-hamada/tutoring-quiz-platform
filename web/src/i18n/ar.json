@@ -1,0 +1,46 @@
+{
+  "app.name": "الاختبارات",
+  "app.loading": "جارٍ التحميل…",
+  "app.retry": "أعد المحاولة",
+  "app.error": "حدث خطأ. أعد المحاولة من فضلك.",
+  "app.offline": "يبدو أنك غير متصل بالإنترنت.",
+
+  "lang.toggle": "English",
+  "lang.label": "اللغة",
+
+  "login.title": "تسجيل الدخول",
+  "login.subtitle": "استخدم رمز الدخول الذي أعطاك إياه معلمك.",
+  "login.code": "رمز الدخول",
+  "login.password": "كلمة المرور",
+  "login.submit": "تسجيل الدخول",
+  "login.working": "جارٍ تسجيل الدخول…",
+  "login.failed": "رمز الدخول أو كلمة المرور غير صحيحة.",
+
+  "nav.quizzes": "الاختبارات",
+  "nav.history": "نتائجي",
+  "nav.teach": "اختباراتي",
+  "nav.admin": "الإدارة",
+  "nav.signOut": "تسجيل الخروج",
+
+  "quiz.questionsLeft_zero": "لم تتبقَّ أسئلة",
+  "quiz.questionsLeft_one": "سؤال واحد متبقٍ",
+  "quiz.questionsLeft_two": "سؤالان متبقيان",
+  "quiz.questionsLeft_few": "{{count}} أسئلة متبقية",
+  "quiz.questionsLeft_many": "{{count}} سؤالاً متبقياً",
+  "quiz.questionsLeft_other": "{{count}} سؤال متبقٍ",
+  "quiz.marks_zero": "لا علامات",
+  "quiz.marks_one": "علامة واحدة",
+  "quiz.marks_two": "علامتان",
+  "quiz.marks_few": "{{count}} علامات",
+  "quiz.marks_many": "{{count}} علامة",
+  "quiz.marks_other": "{{count}} علامة",
+  "quiz.negativeMarking": "الإجابة الخاطئة تخصم من علامتك في هذا الاختبار.",
+  "quiz.noNegativeMarking": "الإجابة الخاطئة لا تخصم من علامتك.",
+
+  "state.available": "متاح",
+  "state.not_open_yet": "لم يبدأ بعد",
+  "state.closed": "مغلق",
+  "state.in_progress": "قيد التقديم",
+  "state.expired": "انتهى الوقت",
+  "state.submitted": "تم التسليم"
+}
