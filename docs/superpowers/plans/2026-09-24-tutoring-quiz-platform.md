@@ -10,6 +10,71 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-24-tutoring-quiz-platform-design.md` — read it alongside this plan. Decision IDs (`D-01`…`D-25`) referenced here are defined in its §2.
 
+
+## Execution status — read this first
+
+**Updated 2026-09-25, end of Phase 3.** Tasks 1–13 are done and merged to `main` (165 API tests,
+13 files, clean `tsc`). Phases 4–5 (Tasks 14–19) remain. Work happens on `feat/v1`; merge to `main`
+with `--no-ff` at each phase boundary so `main` is always submittable.
+
+### Running locally without Docker
+
+Docker is not installed on the dev machine yet. A local Postgres 14 runs on 5432.
+
+```bash
+export DATABASE_URL=postgres://mohammedhamada@localhost:5432/quiz_dev   # dev
+npm test -w api            # tests always use quiz_test via api/test/setup.ts
+npm run build              # tsc; Vitest does NOT typecheck, so run this before every commit
+npm run dev                # tsx watch; runs migrate + seed + sweeper on boot
+```
+
+The API does not load `.env` files; export `DATABASE_URL` yourself. `compose` publishes Postgres on
+host **5433**, not 5432.
+
+### Seeded logins (password `pass1234` for all)
+
+| Role | Login | Notes |
+|---|---|---|
+| Student | `10A-001` … `10A-020`, `10B-…`, `11A-…` | Every class has exactly one open quiz |
+| Teacher | `t-samir` | 10A + 10B; authored both closed quizzes (one deducts, one does not) |
+| Teacher | `t-rana`, `t-huda`, `t-george` | |
+| Principal | `principal` | |
+
+Test fixtures in `api/test/helpers/world.ts` use different codes (`teacher-samir`, `teacher-rana`) — those are test-only.
+
+### Deviations from this plan that Phase 4 must respect
+
+- **Workspaces are `["shared", "api"]` only.** Task 14 must add `"web"` to the root `workspaces`,
+  the root `build` and `dev` scripts, and the `Dockerfile` (build stage + `COPY --from=build /app/web/dist web/dist`).
+- **The implemented response shapes are the contract, not the plan's sketches.** Read
+  `api/src/serializers/*.ts` and `api/src/routes/*.ts` before building a screen. In particular:
+  student quiz `state` is one of `available | not_open_yet | closed | in_progress | expired | submitted`;
+  results and reports carry pre-formatted `*Label` strings alongside integer hundredths.
+- `pg` parses `int8` **and `int8[]`** to numbers (`api/src/db/pool.ts`). The array parser was a real bug.
+- `scopeFor(role)` in `api/src/db/quizzes.ts` is the only home of the teacher-scope rule; its principal
+  branch must keep `$1::bigint` — a bare `TRUE` or an uncast `$1` breaks every principal query.
+- Express 5 makes `req.query` a getter; `validate()` installs parsed input with `defineProperty`.
+
+### API gaps Phase 4 must close first — add these in Task 14 / 16, test-first
+
+| Gap | Needed by | Shape |
+|---|---|---|
+| `PATCH /api/me` `{ locale }` | Task 14 language toggle | persists `users.locale`; 204 |
+| `GET /api/me/classes` | Task 16 class picker | teacher → assigned classes; principal → all |
+| `GET /api/quizzes/:id` (staff, scoped) | Task 16 editor | quiz + questions + options **with** `isCorrect` — staff only |
+| `PATCH /api/quizzes/:id` and `PUT /api/quizzes/:id/questions/:qid` | Task 16 editor | **Missed in Task 7.** Spec §5 lists it |
+
+The last row matters beyond the UI: **spec §11's test "editing a question leaves every recorded grade
+unchanged" does not exist yet**, because there was no edit path to test. The answer snapshots that
+guarantee it are in place (`answers.points_possible` / `points_awarded`), but the guarantee is unproven
+until that test is written against the new PUT.
+
+### Still open
+
+- `docker compose up` has never been run. It must be, from a clean clone, before submission.
+- `data/` quiz content is machine-checked (15 questions, 20 marks, answers spread across a–d, no
+  duplicate options). The Arabic wording has not been reviewed by a native speaker.
+
 ---
 
 ## Global Constraints
@@ -79,7 +144,7 @@ Every task's requirements implicitly include this section.
 **Interfaces:**
 - Produces: `createApp(): express.Express` from `api/src/app.ts` — every later route test imports this.
 
-- [ ] **Step 1: Root workspace files**
+- [x] **Step 1: Root workspace files**
 
 `package.json`:
 ```json
@@ -121,7 +186,7 @@ NODE_ENV=development
 TZ=UTC
 ```
 
-- [ ] **Step 2: Write the failing health test**
+- [x] **Step 2: Write the failing health test**
 
 `api/test/health.test.ts`:
 ```ts
@@ -143,12 +208,12 @@ describe('GET /api/health', () => {
 });
 ```
 
-- [ ] **Step 3: Run it and watch it fail**
+- [x] **Step 3: Run it and watch it fail**
 
 Run: `npm test -w api`
 Expected: FAIL — cannot resolve `../src/app.js`.
 
-- [ ] **Step 4: Implement the app factory**
+- [x] **Step 4: Implement the app factory**
 
 `api/src/app.ts`:
 ```ts
@@ -173,12 +238,12 @@ const port = Number(process.env.PORT ?? 3000);
 createApp().listen(port, () => console.log(`api listening on ${port}`));
 ```
 
-- [ ] **Step 5: Run the test again**
+- [x] **Step 5: Run the test again**
 
 Run: `npm test -w api`
 Expected: PASS, 2 tests.
 
-- [ ] **Step 6: Docker Compose and Dockerfile**
+- [x] **Step 6: Docker Compose and Dockerfile**
 
 `docker-compose.yml` — note the 5433 mapping (D-20):
 ```yaml
@@ -237,7 +302,7 @@ EXPOSE 3000
 CMD ["node", "api/dist/index.js"]
 ```
 
-- [ ] **Step 7: Verify the one command**
+- [ ] **Step 7: Verify the one command** — ⚠️ OPEN: Docker not installed yet
 
 Run: `docker compose up --build`
 Then: `curl -s localhost:3000/api/health`
@@ -245,7 +310,7 @@ Expected: `{"status":"ok"}`
 
 If Docker is unavailable, run `npm run dev -w api` against the local Postgres on 5432 and record the blocker — but do not mark this step complete, because an unverified compose file is the single biggest submission risk (spec appendix).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add -A
@@ -263,7 +328,7 @@ git commit -m "feat: workspace skeleton, compose stack and health endpoint"
 **Interfaces:**
 - Produces: `pool` (a `pg.Pool`), `migrate(): Promise<void>`, `withTestDb(fn)` test helper.
 
-- [ ] **Step 1: Write failing constraint tests**
+- [x] **Step 1: Write failing constraint tests**
 
 These assert the four load-bearing guarantees from spec §4 — the database, not the application, enforces them.
 
@@ -334,12 +399,12 @@ describe('schema constraints', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 Run: `npm test -w api -- schema`
 Expected: FAIL — relation "classes" does not exist.
 
-- [ ] **Step 3: Write the pool**
+- [x] **Step 3: Write the pool**
 
 `api/src/db/pool.ts`:
 ```ts
@@ -348,7 +413,7 @@ import pg from 'pg';
 export const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 ```
 
-- [ ] **Step 4: Write the migration runner**
+- [x] **Step 4: Write the migration runner**
 
 `api/src/db/migrate.ts`:
 ```ts
@@ -378,7 +443,7 @@ export async function migrate(): Promise<void> {
 }
 ```
 
-- [ ] **Step 5: Write the schema**
+- [x] **Step 5: Write the schema**
 
 `api/src/db/migrations/001_init.sql` — marks are stored as `integer` hundredths to match the domain exactly and remove every rounding question at the boundary:
 ```sql
@@ -486,12 +551,12 @@ CREATE INDEX ON quiz_classes(class_id);
 CREATE INDEX ON sessions(expires_at);
 ```
 
-- [ ] **Step 6: Run the tests**
+- [x] **Step 6: Run the tests**
 
 Run: `docker compose up -d db && DATABASE_URL=postgres://quiz:quiz@localhost:5433/quiz npm test -w api -- schema`
 Expected: PASS, 5 tests. The Arabic round-trip proves UTF-8 end to end rather than assuming it.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -514,7 +579,7 @@ git commit -m "feat: database schema with constraint-level one-attempt rule"
   - `totalScore(awarded: Hundredths[]): { raw: Hundredths; display: Hundredths }`
   - `formatMarks(h: Hundredths): string`
 
-- [ ] **Step 1: Write the failing test — the whole table from spec §7**
+- [x] **Step 1: Write the failing test — the whole table from spec §7**
 
 `api/test/domain/scoring.test.ts`:
 ```ts
@@ -602,12 +667,12 @@ describe('formatMarks', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 Run: `npm test -w api -- scoring`
 Expected: FAIL — cannot resolve `scoring.js`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `api/src/domain/marks.ts`:
 ```ts
@@ -655,12 +720,12 @@ export function totalScore(awarded: Hundredths[]): { raw: Hundredths; display: H
 }
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `npm test -w api -- scoring`
 Expected: PASS, 11 tests. If Omar is not exactly `134`, the rounding is being applied to the total rather than per answer — re-read D-19.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -684,7 +749,7 @@ git commit -m "feat: scoring domain with guessing-neutral deduction"
   - `ANSWER_GRACE_MS: number`
   - `canSaveAnswer(a: { expiresAt: Date; submittedAt: Date | null }, now: Date): boolean`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `api/test/domain/attempt.test.ts`:
 ```ts
@@ -763,12 +828,12 @@ describe('canSaveAnswer', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 Run: `npm test -w api -- attempt`
 Expected: FAIL — cannot resolve `attempt.js`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `api/src/domain/attempt.ts`:
 ```ts
@@ -811,12 +876,12 @@ export function canSaveAnswer(a: AttemptTiming, now: Date): boolean {
 }
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `npm test -w api -- attempt`
 Expected: PASS, 15 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -848,7 +913,7 @@ git commit -m "feat: attempt state machine with start guards and latency grace"
   - `req.user: SessionUser` after `requireAuth`
   - Test helper `resetDb()` and `loginAs(app, loginCode, password)` returning a supertest agent.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `api/test/auth.test.ts`:
 ```ts
@@ -922,12 +987,12 @@ describe('GET /api/me', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 Run: `npm test -w api -- auth`
 Expected: FAIL — cannot resolve `helpers/db.js`.
 
-- [ ] **Step 3: Write the test helper**
+- [x] **Step 3: Write the test helper**
 
 `api/test/helpers/db.ts`:
 ```ts
@@ -940,7 +1005,7 @@ export async function resetDb(): Promise<void> {
 }
 ```
 
-- [ ] **Step 4: Implement password hashing with no native dependency**
+- [x] **Step 4: Implement password hashing with no native dependency**
 
 `api/src/auth/password.ts`:
 ```ts
@@ -965,7 +1030,7 @@ export async function verifyPassword(plain: string, stored: string): Promise<boo
 }
 ```
 
-- [ ] **Step 5: Implement sessions**
+- [x] **Step 5: Implement sessions**
 
 `api/src/auth/session.ts` — the cookie carries a random token; only its SHA-256 is stored, so a database leak does not yield usable sessions:
 ```ts
@@ -1003,7 +1068,7 @@ export async function revokeSession(token: string): Promise<void> {
 }
 ```
 
-- [ ] **Step 6: Implement the middleware**
+- [x] **Step 6: Implement the middleware**
 
 `api/src/middleware/validate.ts`:
 ```ts
@@ -1064,7 +1129,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 };
 ```
 
-- [ ] **Step 7: Write the shared schemas and the login route**
+- [x] **Step 7: Write the shared schemas and the login route**
 
 `shared/src/schemas.ts`:
 ```ts
@@ -1132,7 +1197,7 @@ authRoutes.post('/auth/logout', async (req, res) => {
 authRoutes.get('/me', requireAuth, (req, res) => { res.json(serializeMe(req.user!)); });
 ```
 
-- [ ] **Step 8: Wire into the app**
+- [x] **Step 8: Wire into the app**
 
 Modify `api/src/app.ts` — add after the health route:
 ```ts
@@ -1143,12 +1208,12 @@ import { errorHandler } from './middleware/errors.js';
   app.use(errorHandler);        // must be registered last
 ```
 
-- [ ] **Step 9: Run the tests**
+- [x] **Step 9: Run the tests**
 
 Run: `npm test -w api -- auth`
 Expected: PASS, 7 tests. The equal-response test is the one that matters: a different message for "unknown user" would hand an attacker the roster.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add -A
@@ -1184,7 +1249,7 @@ quizzes.csv          slug,title,author_login_code,language,time_limit_minutes,
 
 `opens_at_offset_days` / `closes_at_offset_days` are offsets from seed time, so the sample data is always in a sensible state whenever a reviewer runs it — a fixed date would make every quiz "closed" a week later.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `api/test/seed.test.ts`:
 ```ts
@@ -1255,12 +1320,12 @@ describe('seed', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 Run: `npm test -w api -- seed`
 Expected: FAIL — cannot resolve `seed/index.js`.
 
-- [ ] **Step 3: Write the CSV parser**
+- [x] **Step 3: Write the CSV parser**
 
 `api/src/seed/csv.ts` — quoted fields with embedded commas are required, since Arabic text and question wording contain them:
 ```ts
@@ -1286,7 +1351,7 @@ export function parseCsv(text: string): Record<string, string>[] {
 }
 ```
 
-- [ ] **Step 4: Author the sample data**
+- [x] **Step 4: Author the sample data**
 
 Write the CSV files. Requirements the tests enforce:
 
@@ -1308,7 +1373,7 @@ Write the CSV files. Requirements the tests enforce:
 
 Algebra and Geometry must share an author so the "same teacher, both modes" test passes. Each quiz file has 15 rows, four options, varied `points` (use `100` and `200` hundredths so the totals match the worked papers).
 
-- [ ] **Step 5: Write the seeder**
+- [x] **Step 5: Write the seeder**
 
 `api/src/seed/index.ts`. Structure — keep each loader a named function so failures point at a file:
 ```ts
@@ -1337,7 +1402,7 @@ export async function seed(): Promise<void> {
 
 Implement each function with plain `INSERT ... RETURNING id` and a `Map<string, number>` from natural key to id. `seedHistoricAttempts` must produce answers through `gradeAnswer` and totals through `totalScore` — **never hand-written score values**, or the seed can disagree with the scoring rules it is meant to demonstrate.
 
-- [ ] **Step 6: Run migrate and seed on boot (D-18)**
+- [x] **Step 6: Run migrate and seed on boot (D-18)**
 
 Modify `api/src/index.ts`:
 ```ts
@@ -1353,12 +1418,12 @@ createApp().listen(port, () => console.log(`api listening on ${port}`));
 
 Add to `api/package.json` scripts: `"seed": "node dist/seed/cli.js"` with a two-line `cli.ts` calling `migrate()` then `seed()`, so the README can document it explicitly even though boot handles it.
 
-- [ ] **Step 7: Run the tests**
+- [x] **Step 7: Run the tests**
 
 Run: `npm test -w api -- seed`
 Expected: PASS, 8 tests.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add -A
@@ -1385,7 +1450,7 @@ git commit -m "feat: CSV sample data and idempotent seeder sharing the import fo
   - `serializeQuizForTeacher(row)`, `serializeQuizForStudent(row)` — **the student shape never includes `is_correct`**
   - `teacherScope(teacherId)` SQL fragment, exported from `api/src/db/quizzes.ts` and used by every teacher-scoped query (D-09)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `api/test/quizzes.test.ts` — the important cases are the publish validation and the class-targeting guard:
 ```ts
@@ -1489,7 +1554,7 @@ function validQuestionBody() {
 }
 ```
 
-- [ ] **Step 2: Write the shared world helper**
+- [x] **Step 2: Write the shared world helper**
 
 `api/test/helpers/world.ts` — every later test file uses this, so build it once:
 ```ts
@@ -1527,12 +1592,12 @@ export async function loginAs(app: Express, loginCode: string) {
 }
 ```
 
-- [ ] **Step 3: Run and watch it fail**
+- [x] **Step 3: Run and watch it fail**
 
 Run: `npm test -w api -- quizzes`
 Expected: FAIL — 404 on `POST /api/quizzes`.
 
-- [ ] **Step 4: Add the schemas**
+- [x] **Step 4: Add the schemas**
 
 Append to `shared/src/schemas.ts`:
 ```ts
@@ -1557,7 +1622,7 @@ export const createQuestionBody = z.object({
 export type CreateQuestionBody = z.infer<typeof createQuestionBody>;
 ```
 
-- [ ] **Step 5: Write the D-09 scope fragment once**
+- [x] **Step 5: Write the D-09 scope fragment once**
 
 `api/src/db/quizzes.ts`:
 ```ts
@@ -1575,7 +1640,7 @@ export const TEACHER_SCOPE = `
 `;
 ```
 
-- [ ] **Step 6: Implement the routes**
+- [x] **Step 6: Implement the routes**
 
 `api/src/routes/quizzes.ts`. Rules the implementation must follow:
 - Creating a quiz: reject `classIds` containing a class the teacher is not assigned to → **403**.
@@ -1583,12 +1648,12 @@ export const TEACHER_SCOPE = `
 - Publish validation returns `422 { error: 'not_publishable', problems: [...] }` where `problems` may contain `'no_questions'`, `'question_N_needs_four_options'`, `'question_N_needs_one_correct_option'`.
 - Adding a question assigns `position = COALESCE(MAX(position),0)+1` inside the same transaction as its options.
 
-- [ ] **Step 7: Run the tests**
+- [x] **Step 7: Run the tests**
 
 Run: `npm test -w api -- quizzes`
 Expected: PASS, 9 tests.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add -A
@@ -1614,7 +1679,7 @@ git commit -m "feat: quiz authoring with publish validation and teacher class sc
   - `GET /api/attempts/:id` → `{ attempt: { id, expiresAt, submittedAt, state }, serverNow, quiz: {...}, questions: [...], answers: [...] }`
   - `serializeQuestionForAttempt(q)` — **returns `{ id, position, text, points, options: [{ id, position, text }] }` and nothing else. No `isCorrect` field exists on this shape.**
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `api/test/attempts-start.test.ts`:
 ```ts
@@ -1725,7 +1790,7 @@ describe('GET /api/attempts/:id', () => {
 });
 ```
 
-- [ ] **Step 2: Write the quiz test helper**
+- [x] **Step 2: Write the quiz test helper**
 
 `api/test/helpers/quiz.ts`:
 ```ts
@@ -1769,12 +1834,12 @@ export async function makeQuiz(o: Opts) {
 }
 ```
 
-- [ ] **Step 3: Run and watch it fail**
+- [x] **Step 3: Run and watch it fail**
 
 Run: `npm test -w api -- attempts-start`
 Expected: FAIL — 404 on the attempt route.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 `api/src/routes/attempts.ts`. Rules:
 - Load the quiz with its `classIds` and the caller's existing attempt in one query, then call `canStart` — the route contains no scheduling logic of its own.
@@ -1789,12 +1854,12 @@ Expected: FAIL — 404 on the attempt route.
 - `max_score` is `SUM(points)` over the quiz's questions, snapshotted at start.
 - `GET /api/attempts/:id` requires the attempt's `student_id` to equal `req.user.id`, else 404.
 
-- [ ] **Step 5: Run the tests**
+- [x] **Step 5: Run the tests**
 
 Run: `npm test -w api -- attempts-start`
 Expected: PASS, 10 tests. If the race test intermittently produces two 201s, the unique-violation catch is missing.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
@@ -1813,7 +1878,7 @@ git commit -m "feat: attempt start with database-enforced single attempt and ser
 - Consumes: `canSaveAnswer`, `ANSWER_GRACE_MS`, `gradeAnswer`.
 - Produces: `PUT /api/attempts/:id/answers/:questionId` → `200 { saved: true }` · `409 { error: 'attempt_closed' }` · `400` · `404`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `api/test/attempts-answer.test.ts`:
 ```ts
@@ -1935,12 +2000,12 @@ describe('PUT /api/attempts/:id/answers/:questionId', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 Run: `npm test -w api -- attempts-answer`
 Expected: FAIL — 404 on the answer route.
 
-- [ ] **Step 3: Add the schema**
+- [x] **Step 3: Add the schema**
 
 Append to `shared/src/schemas.ts`:
 ```ts
@@ -1950,7 +2015,7 @@ export const saveAnswerBody = z.object({
 export type SaveAnswerBody = z.infer<typeof saveAnswerBody>;
 ```
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 In `api/src/routes/attempts.ts`, the handler in order:
 
@@ -1971,12 +2036,12 @@ In `api/src/routes/attempts.ts`, the handler in order:
          answered_at        = now()
    ```
 
-- [ ] **Step 5: Run the tests**
+- [x] **Step 5: Run the tests**
 
 Run: `npm test -w api -- attempts-answer`
 Expected: PASS, 10 tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
@@ -1998,7 +2063,7 @@ git commit -m "feat: grade each answer at save time with cross-question tamperin
   - `finalizeExpiredAttempts(): Promise<number>` — returns how many were closed
   - `startSweeper(intervalMs?: number): NodeJS.Timeout`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `api/test/attempts-submit.test.ts`:
 ```ts
@@ -2105,12 +2170,12 @@ describe('finalizeExpiredAttempts', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 Run: `npm test -w api -- attempts-submit`
 Expected: FAIL — cannot resolve `sweeper.js`.
 
-- [ ] **Step 3: Implement the sweeper**
+- [x] **Step 3: Implement the sweeper**
 
 `api/src/sweeper.ts` — one statement, so concurrent runs are harmless:
 ```ts
@@ -2149,7 +2214,7 @@ export function startSweeper(intervalMs = 60_000): NodeJS.Timeout {
 }
 ```
 
-- [ ] **Step 4: Implement submit**
+- [x] **Step 4: Implement submit**
 
 In `api/src/routes/attempts.ts`. Reuse the same totals aggregate so submit and sweeper cannot drift:
 ```sql
@@ -2164,16 +2229,16 @@ UPDATE attempts a
 ```
 `COALESCE` on both stamp columns is what makes a repeat submit idempotent. No rows returned → **404**.
 
-- [ ] **Step 5: Start the sweeper on boot**
+- [x] **Step 5: Start the sweeper on boot**
 
 Modify `api/src/index.ts` — add `startSweeper();` after `await seed();`.
 
-- [ ] **Step 6: Run the tests**
+- [x] **Step 6: Run the tests**
 
 Run: `npm test -w api -- attempts-submit`
 Expected: PASS, 7 tests.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -2194,7 +2259,7 @@ git commit -m "feat: submission and idempotent expiry sweeper for abandoned atte
   - `GET /api/attempts/:id/result` → locked: `{ locked: true, displayScore, maxScore, answersAvailableAt }` · unlocked: adds `questions: [{ id, text, points, yourOptionId, correctOptionId, awarded }]`
   - `GET /api/students/me/history` → `[{ quizId, title, displayScore, maxScore, submittedAt, reviewAvailableAt }]`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `api/test/results.test.ts` — the locked-payload leak test is the one that matters:
 ```ts
@@ -2285,12 +2350,12 @@ describe('GET /api/students/me/history', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 Run: `npm test -w api -- results`
 Expected: FAIL — 404 on the result route.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `api/src/serializers/result.ts` — **two separate functions, not one with a flag.** The locked serializer has no code path that can reach `correctOptionId`:
 ```ts
@@ -2310,12 +2375,12 @@ export const serializeUnlockedResult = (a: {
 
 The route decides with `new Date() >= quiz.closes_at` (D-10) and calls one or the other. The unlocked branch runs a second query to fetch correct options; the locked branch never issues it.
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `npm test -w api -- results`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -2337,7 +2402,7 @@ git commit -m "feat: results with review gated on the quiz close date"
   - `GET /api/reports/quizzes/:id/classes/:classId` → `{ students: [{ id, fullName, displayScore, maxScore, submittedAt, state }] }`
   - Principal responses additionally include `rawScore`; teacher responses never do.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `api/test/reports.test.ts` — the two D-09 tests are the point of this task:
 ```ts
@@ -2413,12 +2478,12 @@ describe('GET /api/reports/quizzes/:id/classes/:classId', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 Run: `npm test -w api -- reports`
 Expected: FAIL — 404.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Both routes build their `WHERE` from a single helper so D-09 exists in exactly one place:
 ```ts
@@ -2451,12 +2516,12 @@ SELECT c.id AS class_id, c.name,
  GROUP BY c.id, c.name
 ```
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `npm test -w api -- reports`
 Expected: PASS, 8 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -2478,7 +2543,7 @@ git commit -m "feat: class-average reports scoped to a teacher's own quizzes and
   - `POST /api/admin/assignments` `{ teacherId, classIds }` — replaces the teacher's assignments
   - `POST /api/admin/import` `{ kind: 'students'|'teachers', csv: string }` → `{ created, updated, errors: [{ line, message }] }`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `api/test/admin.test.ts`:
 ```ts
@@ -2534,26 +2599,26 @@ describe('principal administration', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 Run: `npm test -w api -- admin`
 Expected: FAIL — 404.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Reuse `parseCsv` from Task 6 — the importer and the seeder must share it (D-17). Import is row-by-row, collecting errors with 1-based line numbers counting the header as line 1, so a bad row never aborts a good one. Upsert on `login_code`.
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `npm test -w api -- admin`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 5: Run the whole API suite**
+- [x] **Step 5: Run the whole API suite**
 
 Run: `npm test -w api`
 Expected: all green, roughly 90 tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
