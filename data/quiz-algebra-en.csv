@@ -1,0 +1,16 @@
+position,text,points,option_a,option_b,option_c,option_d,correct
+1,Solve for x: 2x + 6 = 14,100,x = 8,x = 4,x = 10,x = 3,b
+2,Simplify: 3(a + 4) - 2a,100,5a + 12,a + 4,a + 12,5a + 4,c
+3,What is the value of 5^0?,200,0,5,1,undefined,c
+4,Factorise: x^2 - 9,100,(x-3)(x-3),(x+3)(x-3),(x+9)(x-1),(x-9)(x+1),b
+5,"If y = 3x - 2 and x = 5, what is y?",100,13,17,15,8,a
+6,Solve: x/4 = 7,200,x = 28,x = 11,x = 3,x = 1.75,a
+7,Expand: (x + 2)(x + 5),100,x^2 + 10x + 7,x^2 + 7x + 7,x^2 + 3x + 10,x^2 + 7x + 10,d
+8,What is the slope of the line y = -2x + 9?,100,9,2,-9,-2,d
+9,Solve the inequality: 3x < 12,200,x > 4,x < 9,x > 9,x < 4,d
+10,Simplify: (2x^3)(4x^2),100,6x^5,8x^6,8x^5,6x^6,c
+11,"If 4x - 3 = 2x + 7, what is x?",100,x = 2,x = 5,x = 10,x = 4,b
+12,What is the highest common factor of 12 and 18?,200,6,2,3,12,a
+13,Evaluate: |-7| + 3,100,10,-4,4,-10,a
+14,"A line passes through (0,3) and has slope 2. What is its equation?",100,y = 3x + 2,y = 2x - 3,y = 2x + 3,y = x + 3,c
+15,Solve: x^2 = 49,200,x = 7 only,x = 7 or x = -7,x = -7 only,no solution,b

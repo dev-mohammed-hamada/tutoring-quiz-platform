@@ -1,0 +1,16 @@
+position,text,points,option_a,option_b,option_c,option_d,correct
+1,How many degrees are in the interior angles of a triangle?,100,90,270,180,360,c
+2,What is the area of a rectangle 8 cm by 5 cm?,100,40 cm^2,13 cm^2,26 cm^2,45 cm^2,a
+3,A right angle measures how many degrees?,200,45,60,90,180,c
+4,What is the circumference of a circle with radius 7 cm? Use pi = 22/7.,100,22 cm,44 cm,14 cm,154 cm,b
+5,How many sides does a hexagon have?,100,6,5,7,8,a
+6,"In a right triangle with legs 3 and 4, how long is the hypotenuse?",200,6,7,5,12,c
+7,What is the area of a triangle with base 10 and height 6?,100,30,60,16,20,a
+8,Two angles that sum to 180 degrees are called:,100,complementary,vertical,adjacent,supplementary,d
+9,How many lines of symmetry does a square have?,200,2,3,8,4,d
+10,What is the volume of a cube with edge 3 cm?,100,9 cm^3,18 cm^3,27 cm^3,81 cm^3,c
+11,An equilateral triangle has each angle equal to:,100,45,60,90,120,b
+12,What is the sum of interior angles of a quadrilateral?,200,180,270,540,360,d
+13,A circle has diameter 10 cm. What is its radius?,100,20 cm,5 cm,10 cm,2.5 cm,b
+14,Which of these is NOT a property of a parallelogram?,100,all sides are equal,opposite sides are parallel,opposite angles are equal,diagonals bisect each other,a
+15,The longest side of a right triangle is called the:,200,base,hypotenuse,height,median,b
