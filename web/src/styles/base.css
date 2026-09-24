@@ -82,3 +82,67 @@ label { display: block; font-size: var(--step--1); color: var(--ink-muted); marg
 
 /* Mirror directional icons rather than swapping assets. */
 [dir="rtl"] .icon-chevron { transform: scaleX(-1); }
+
+/* --- Student flow ------------------------------------------------------- */
+
+.list-plain { list-style: none; margin: 0; padding: 0; }
+
+.visually-hidden {
+  position: absolute; inline-size: 1px; block-size: 1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+
+.warn { color: var(--warn); }
+
+.tabs { gap: var(--space-2); }
+.tab {
+  min-block-size: var(--tap); display: inline-flex; align-items: center;
+  padding-inline: var(--space-3); border-radius: var(--radius);
+  color: var(--ink-muted); text-decoration: none;
+}
+.tab--on { background: var(--accent-sunken); color: var(--accent); }
+
+/* The bar stays put while the questions scroll under it, so the remaining time
+   is never more than a glance away on a phone. */
+.attempt__bar {
+  position: sticky; inset-block-start: 0; z-index: 1;
+  padding-block: var(--space-2);
+}
+.attempt__title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.countdown { font-variant-numeric: tabular-nums; font-size: var(--step-1); font-weight: 600; }
+
+.progress { inline-size: 100%; block-size: var(--space-2); }
+
+.question { border: 1px solid var(--line); }
+.question__text { font-size: var(--step-1); }
+
+.option {
+  display: flex; align-items: center; gap: var(--space-3);
+  min-block-size: var(--tap); padding-inline: var(--space-3); padding-block: var(--space-2);
+  border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer;
+}
+.option--on { border-color: var(--accent); background: var(--accent-sunken); }
+.option--static { cursor: default; }
+.option--right { border-color: var(--ok); background: var(--accent-sunken); }
+.option--wrong { border-color: var(--danger); background: var(--danger-sunken); }
+.option input { inline-size: 1.25rem; block-size: 1.25rem; accent-color: var(--accent); }
+
+.tags { margin-inline-start: auto; display: flex; gap: var(--space-2); flex-shrink: 0; }
+.tag { font-size: var(--step--1); }
+.tag--ok { color: var(--ok); }
+.tag--bad { color: var(--danger); }
+
+.score__value { font-size: var(--step-3); font-weight: 600; font-variant-numeric: tabular-nums; }
+.score__value--small { font-size: var(--step-1); }
+
+fieldset { margin: 0; }
+
+/* The confirmation has to arrive where the thumb already is. Appended in the
+   flow it landed below the fold on a phone, so it comes up as a sheet instead. */
+.confirm {
+  position: fixed; inset: 0; z-index: 2;
+  display: flex; align-items: flex-end;
+  background: rgb(18 32 43 / .45);
+  padding: var(--space-4);
+}
+.confirm__sheet { inline-size: 100%; max-inline-size: 42rem; margin-inline: auto; }

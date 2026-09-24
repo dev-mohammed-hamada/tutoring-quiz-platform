@@ -1,3 +1,4 @@
+import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../auth/SessionProvider';
 import { LanguageToggle } from './LanguageToggle';
@@ -26,6 +27,17 @@ export function AppHeader() {
         </div>
       </div>
       {user && <Text as="p" className="muted">{user.fullName}</Text>}
+
+      {user?.role === 'student' && (
+        <nav className="row tabs">
+          <NavLink to="/quizzes" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
+            {t('nav.quizzes')}
+          </NavLink>
+          <NavLink to="/history" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
+            {t('nav.history')}
+          </NavLink>
+        </nav>
+      )}
     </header>
   );
 }

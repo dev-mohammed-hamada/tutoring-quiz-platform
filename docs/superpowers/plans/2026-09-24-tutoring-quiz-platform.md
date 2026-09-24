@@ -13,8 +13,8 @@
 
 ## Execution status — read this first
 
-**Updated 2026-09-25, Task 14 done.** Tasks 1–14 are done; 1–13 are merged to `main`. The suite is
-174 API tests (14 files) plus 10 web tests (2 files), clean `tsc` and a clean Vite build. Tasks 15–19
+**Updated 2026-09-25, Task 15 done.** Tasks 1–15 are done; 1–13 are merged to `main`. The suite is
+174 API tests (14 files) plus 17 web tests (4 files), clean `tsc` and a clean Vite build. Tasks 16–19
 remain. Work happens on `feat/v1`; merge to `main` with `--no-ff` at each phase boundary so `main`
 is always submittable.
 
@@ -84,6 +84,10 @@ guarantee it are in place (`answers.points_possible` / `points_awarded`), but th
 until that test is written against the new PUT.
 
 ### Still open
+
+- **`quiz_dev` now has a submitted attempt for `10A-002` on القراءة والفهم**, created by Task 15's
+  Step 5 walkthrough. The one-attempt rule means that student cannot sit it again; recreate
+  `quiz_dev` to reseed if you want a clean student for a demo.
 
 - `docker compose up` has never been run. It must be, from a clean clone, before submission.
 - `data/` quiz content is machine-checked (15 questions, 20 marks, answers spread across a–d, no
@@ -2902,7 +2906,7 @@ git commit -m "feat: web shell with bilingual RTL support and design tokens"
 **Interfaces:**
 - Produces: `<Countdown expiresAt={ISO} serverNow={ISO} onExpire={() => void} />`
 
-- [ ] **Step 1: Write the failing countdown test**
+- [x] **Step 1: Write the failing countdown test**
 
 The countdown is the only genuinely tricky component: it must be driven by the **server's** clock, not the device's.
 
@@ -2949,12 +2953,12 @@ describe('Countdown', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 Run: `npm test -w web -- countdown`
 Expected: FAIL — cannot resolve `Countdown`.
 
-- [ ] **Step 3: Implement the countdown**
+- [x] **Step 3: Implement the countdown**
 
 `web/src/components/Countdown.tsx`:
 ```tsx
@@ -2990,7 +2994,7 @@ export function Countdown({ expiresAt, serverNow, onExpire }:
 }
 ```
 
-- [ ] **Step 4: Build the screens**
+- [x] **Step 4: Build the screens**
 
 **`QuizListPage`** — a card per quiz showing state from the API: *Open until \<date>* · *Opens \<date>* · *Closed* · *Completed — \<score>*. Only an open, untaken quiz gets a Start button. Titles render through `<Text>`.
 
@@ -3004,12 +3008,12 @@ export function Countdown({ expiresAt, serverNow, onExpire }:
 
 **`HistoryPage`** — a list of past attempts with scores and dates.
 
-- [ ] **Step 5: Run the tests and check it on a phone viewport**
+- [x] **Step 5: Run the tests and check it on a phone viewport**
 
 Run: `npm test -w web`
 Then: dev server at 375px. Start a quiz, answer, refresh mid-attempt — answers must still be there and the timer must have kept running.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A

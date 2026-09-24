@@ -4,6 +4,10 @@ import { DirectionProvider } from './components/DirectionProvider';
 import { useSession } from './auth/SessionProvider';
 import { LoginPage } from './pages/LoginPage';
 import { AppHeader } from './components/AppHeader';
+import { QuizListPage } from './pages/QuizListPage';
+import { AttemptPage } from './pages/AttemptPage';
+import { ResultPage } from './pages/ResultPage';
+import { HistoryPage } from './pages/HistoryPage';
 import type { Role } from './api/types';
 
 /** Where each role lands after signing in. */
@@ -50,7 +54,10 @@ export default function App() {
           loading ? <Loading /> : user ? <Navigate to={HOME[user.role]} replace /> : <LoginPage />
         } />
 
-        <Route path="/quizzes" element={<RequireRole roles={['student']}><Soon title="Quizzes" /></RequireRole>} />
+        <Route path="/quizzes" element={<RequireRole roles={['student']}><QuizListPage /></RequireRole>} />
+        <Route path="/attempts/:id" element={<RequireRole roles={['student']}><AttemptPage /></RequireRole>} />
+        <Route path="/attempts/:id/result" element={<RequireRole roles={['student']}><ResultPage /></RequireRole>} />
+        <Route path="/history" element={<RequireRole roles={['student']}><HistoryPage /></RequireRole>} />
         <Route path="/teach" element={<RequireRole roles={['teacher', 'principal']}><Soon title="My quizzes" /></RequireRole>} />
         <Route path="/admin" element={<RequireRole roles={['principal']}><Soon title="Administration" /></RequireRole>} />
 

@@ -1,3 +1,5 @@
+import '@testing-library/jest-dom/vitest';
+
 /**
  * Node 20+ ships its own experimental `localStorage` global. Under Vitest it wins
  * over jsdom's, and it arrives as a bare object with none of the Storage methods,

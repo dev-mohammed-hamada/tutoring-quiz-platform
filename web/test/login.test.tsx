@@ -68,9 +68,12 @@ describe('signing in', () => {
   });
 
   it('sends a signed-in student to their quizzes', async () => {
+    // This student's account is set to English, so the interface stays English
+    // after sign-in; a student whose account says Arabic would flip to Arabic here.
     vi.stubGlobal('fetch', stubApi({
       'GET /api/me': () => ({ status: 401, body: { error: 'unauthenticated' } }),
-      'POST /api/auth/login': () => ({ status: 200, body: { user: me } }),
+      'POST /api/auth/login': () => ({ status: 200, body: { user: { ...me, locale: 'en' } } }),
+      'GET /api/quizzes': () => ({ status: 200, body: [] }),
     }));
     await i18n.changeLanguage('en');
     const user = userEvent.setup();
