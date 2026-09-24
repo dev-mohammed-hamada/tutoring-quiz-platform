@@ -170,3 +170,27 @@ attemptRoutes.put('/attempts/:id/answers/:questionId', ...student,
 
     res.json({ saved: true });
   });
+
+attemptRoutes.post('/attempts/:id/submit', ...student, validate({ params: idParam }), async (req, res) => {
+  const { id } = req.params as unknown as { id: number };
+  const user = req.user!;
+
+  // The same aggregate the sweeper uses, so a manual submit and an expiry can
+  // never disagree about a score. COALESCE on both stamp columns is what makes
+  // a repeated submit idempotent rather than moving the timestamp forward.
+  const { rows } = await pool.query(
+    `UPDATE attempts a
+        SET submitted_at     = COALESCE(a.submitted_at, now()),
+            submitted_reason = COALESCE(a.submitted_reason, 'manual'),
+            raw_score        = t.raw,
+            display_score    = GREATEST(0, t.raw)
+       FROM (SELECT COALESCE(SUM(points_awarded), 0)::int AS raw
+               FROM answers WHERE attempt_id = $1) t
+      WHERE a.id = $1 AND a.student_id = $2
+      RETURNING a.display_score, a.max_score`,
+    [id, user.id]);
+
+  const attempt = rows[0];
+  if (!attempt) { res.status(404).json({ error: 'not_found' }); return; }
+  res.json({ displayScore: attempt.display_score, maxScore: attempt.max_score });
+});
