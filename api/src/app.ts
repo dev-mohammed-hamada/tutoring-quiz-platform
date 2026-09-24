@@ -5,6 +5,7 @@ import { authRoutes } from './routes/auth.js';
 import { quizRoutes } from './routes/quizzes.js';
 import { attemptRoutes } from './routes/attempts.js';
 import { reportRoutes } from './routes/reports.js';
+import { adminRoutes } from './routes/admin.js';
 import { errorHandler } from './middleware/errors.js';
 
 export function createApp() {
@@ -21,6 +22,7 @@ export function createApp() {
   app.use('/api', quizRoutes);
   app.use('/api', attemptRoutes);
   app.use('/api', reportRoutes);
+  app.use('/api', adminRoutes);
 
   app.use(errorHandler);   // must stay last
   return app;
