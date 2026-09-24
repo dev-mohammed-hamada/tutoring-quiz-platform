@@ -30,8 +30,9 @@ npm run seed
 docker compose up --build     # app on :3000, Postgres published on host :5433
 ```
 
-- IMPORTANT: Vitest does not typecheck. Run `npm run build` as well as the tests before every
-  commit — a green suite has twice sat on top of a broken compile.
+- Vitest does not typecheck. A hook (`.claude/hooks/typecheck-before-commit.sh`) runs
+  `npm run build` before every `git commit` and blocks the commit if it fails. Run the build
+  yourself after a change rather than finding out at commit time.
 - Suites run serially (`fileParallelism: false`) because they share one database and truncate
   between cases. Don't re-enable parallelism. Override the database with `TEST_DATABASE_URL`.
 
