@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { authRoutes } from './routes/auth.js';
 import { quizRoutes } from './routes/quizzes.js';
+import { attemptRoutes } from './routes/attempts.js';
 import { errorHandler } from './middleware/errors.js';
 
 export function createApp() {
@@ -17,6 +18,7 @@ export function createApp() {
 
   app.use('/api', authRoutes);
   app.use('/api', quizRoutes);
+  app.use('/api', attemptRoutes);
 
   app.use(errorHandler);   // must stay last
   return app;
