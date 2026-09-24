@@ -13,10 +13,10 @@
 
 ## Execution status — read this first
 
-**Updated 2026-09-25, Task 18 done.** Tasks 1–18 are done; 1–17 are merged to `main`. The suite is
-188 API tests, 29 web tests and 9 end-to-end tests at a 375px viewport, with a clean `tsc` and Vite
-build. Only Task 19 (delivery documentation) remains — and its README, DECISIONS and AI_USAGE are
-already written, leaving the Docker verification in its Step 5. Work happens on `feat/v1`; merge to `main` with `--no-ff` at each phase boundary so `main`
+**Updated 2026-09-25, Tasks 1–19 done bar one blocked step.** Everything through Task 19 is written
+and verified: 188 API tests, 29 web tests and 9 end-to-end tests at a 375px viewport, with a clean
+`tsc` and Vite build. The single outstanding item is Task 19's Step 5 — the `docker compose` run —
+which cannot be done on this machine. Work happens on `feat/v1`; merge to `main` with `--no-ff` at each phase boundary so `main`
 is always submittable.
 
 ### Running locally without Docker
@@ -3150,30 +3150,30 @@ git commit -m "test: end-to-end coverage at phone width and CI pipeline"
 **Files:**
 - Create: `README.md`, `DECISIONS.md`, `AI_USAGE.md`, `CLAUDE.md`
 
-- [ ] **Step 1: README**
+- [x] **Step 1: README**
 
 Must contain, in this order: what it is in two lines · **the one command** (`docker compose up`) · the URL · **a login table** with a student, a teacher and the principal, with real seeded codes and passwords · how sample data loads and how to reload it · the no-Docker path if that is what shipped · the test commands · a short architecture note.
 
 Verify the login table by actually logging in as each of the three before committing.
 
-- [ ] **Step 2: DECISIONS.md**
+- [x] **Step 2: DECISIONS.md**
 
 Section 2 of the spec is the source. Structure it as: **assumptions made** (the decision register) · **built but not asked for** (bilingual interface, CSV import, principal role, the logical-properties CI gate — each with one line of why) · **deliberately left out** (spec §12's out-list) · **next week** (spec §13).
 
 Lead with the negative-marking amendment. A decision that was reconsidered, with the reasoning for the change, says more than one that was merely made.
 
-- [ ] **Step 3: AI_USAGE.md**
+- [x] **Step 3: AI_USAGE.md**
 
 Honest and specific. What to cover: which tools · that the brief was decomposed into a traced requirements analysis *before* any code, and that this conversation produced the spec and this plan · that the work ran test-first, with the scoring fixtures derived from worked examples rather than from the implementation · **where the AI was wrong and how it was caught** — the worked scoring examples were computed with exact thirds and were off by one hundredth once per-answer rounding was decided; the error was found by re-deriving the fixtures with a script before writing the tests · how output was verified (the suite, the adversarial list, a real phone viewport).
 
-- [ ] **Step 4: CLAUDE.md**
+- [x] **Step 4: CLAUDE.md**
 
 Already written on 2026-09-25: root `CLAUDE.md` plus path-scoped `.claude/rules/api.md` and
 `.claude/rules/web.md`. Review it against what actually happened in Phases 4–5: delete lines
 Claude now gets right without being told, and add any correction that had to be made twice.
 Keep the root file well under 200 lines.
 
-- [ ] **Step 5: Final verification before submitting**
+- [ ] **Step 5: Final verification before submitting**  *(blocked: Docker Desktop is not installed here — see Still open)*
 
 ```bash
 git clean -xdn                      # confirm nothing needed is untracked
@@ -3182,7 +3182,7 @@ docker compose up --build           # the reviewer's exact experience
 ```
 Then log in as each of the three roles from the README table, sit a quiz on a 375px viewport, switch to Arabic, and read a report. Only then submit.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
