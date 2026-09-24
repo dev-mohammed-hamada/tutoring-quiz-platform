@@ -3140,19 +3140,10 @@ Honest and specific. What to cover: which tools · that the brief was decomposed
 
 - [ ] **Step 4: CLAUDE.md**
 
-Short and enforceable:
-```markdown
-# Project conventions
-
-- Marks are integer hundredths everywhere in the domain. 100 = 1.00 mark. Never floats.
-- Wrong-answer deduction is `Math.round(points / 3)`, applied per answer.
-- CSS uses logical properties only: `margin-inline-start`, never `margin-left`.
-- Every user-generated string renders through `<Text>`, which sets `dir="auto"`.
-- Responses are built by role-specific serializers. Never `delete` a field to hide it.
-- `options.is_correct` must never appear in an attempt or locked-result payload.
-- Reading another user's resource returns 404, not 403.
-- Tests first. Run them before claiming anything works.
-```
+Already written on 2026-09-25: root `CLAUDE.md` plus path-scoped `.claude/rules/api.md` and
+`.claude/rules/web.md`. Review it against what actually happened in Phases 4–5: delete lines
+Claude now gets right without being told, and add any correction that had to be made twice.
+Keep the root file well under 200 lines.
 
 - [ ] **Step 5: Final verification before submitting**
 

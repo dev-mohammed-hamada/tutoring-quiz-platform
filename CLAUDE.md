@@ -1,0 +1,72 @@
+<!-- Maintainer note (stripped before it reaches Claude's context): keep this file short.
+Progress changes daily and belongs in the plan's "Execution status" section, not here.
+Area-specific rules live in .claude/rules/ and load only when matching files are read. -->
+
+# Tutoring Quiz Platform
+
+Timed multiple-choice quizzes for a tutoring centre in Amman. Students sit each quiz once on a
+phone, teachers author them, the principal reads the results. Arabic and RTL throughout.
+
+## At the start of a session
+
+- Read "Execution status — read this first" in `docs/superpowers/plans/2026-09-24-tutoring-quiz-platform.md`.
+  It says which tasks are done, which API gaps are open, and where the code deviates from the plan.
+- Product decisions are the register in §2 of `docs/superpowers/specs/2026-09-24-tutoring-quiz-platform-design.md`
+  (`D-01` to `D-25`). Don't reverse one without asking; add new ones there.
+- `BRIEF_ANALYSIS.md` traces every requirement to the client's own words.
+
+## Commands
+
+npm only — the lockfile is `package-lock.json`. Workspaces: `shared`, `api`, and `web` from Task 14.
+
+```bash
+export DATABASE_URL=postgres://<user>@localhost:5432/quiz_dev   # the API does not read .env files
+npm run dev                   # API under tsx watch; migrates, seeds and starts the sweeper on boot
+npm test -w api               # all API tests, always against quiz_test (see api/test/setup.ts)
+npm test -w api -- scoring    # one file by name; prefer this while iterating
+npm run build                 # tsc for shared and api
+npm run migrate
+npm run seed
+docker compose up --build     # app on :3000, Postgres published on host :5433
+```
+
+- IMPORTANT: Vitest does not typecheck. Run `npm run build` as well as the tests before every
+  commit — a green suite has twice sat on top of a broken compile.
+- Suites run serially (`fileParallelism: false`) because they share one database and truncate
+  between cases. Don't re-enable parallelism. Override the database with `TEST_DATABASE_URL`.
+
+## Layout
+
+- `shared/src/schemas.ts` — zod schemas; the TypeScript types are inferred from them. This is the API contract.
+- `api/src/domain/` — pure scoring and attempt-state logic: no I/O, no database, no clock reads (pass `now` in).
+- `api/src/routes/` thin handlers · `api/src/serializers/` response shapes · `api/src/db/` pool, migrations, scope predicate.
+- `data/*.csv` — sample data, in the same format the admin importer reads.
+
+## Domain rules that apply everywhere
+
+- Marks are integer hundredths: `100` is 1.00 mark. Never floats, never a decimal library.
+- On a negative-marking quiz a wrong answer costs `Math.round(points / 3)`, rounded per answer.
+  Blanks cost nothing. A total is the exact sum of its per-answer values.
+- `display_score = max(0, raw_score)`. Only the principal ever receives `raw_score`.
+- The one-attempt rule is the `UNIQUE (quiz_id, student_id)` constraint. Routes catch `23505`;
+  a read-then-insert check alone loses the race.
+- The deadline is `attempts.expires_at`, written once by Postgres at start. Never trust a client clock.
+- Timestamps are `timestamptz` in UTC. Display in `Asia/Amman` with Western digits.
+
+## Workflow
+
+- Test first: write the failing test, run it, confirm it fails for the expected reason, then implement.
+- Work on `feat/v1`. Merge to `main` with `--no-ff` at each phase boundary so `main` is always
+  submittable. Never force-push `main`.
+- One commit per task with a conventional prefix (`feat:`, `fix:`, `test:`, `docs:`). Messages say
+  why, not just what — reviewers read the history.
+- Schema changes are new numbered files in `api/src/db/migrations/`. Never edit an applied one.
+- Editing `data/` does not change an existing dev database: the seed skips once the `principal`
+  login exists. Recreate `quiz_dev` to reseed.
+- `byThursday_Brief.pdf` is gitignored and stays out of the repo. Don't quote the assessment's
+  own instructions in committed files; quoting the client brief is fine.
+
+## When compacting
+
+Keep the current task number, files changed since the last commit, the names of any failing
+tests, and the open items from the plan's execution status.
