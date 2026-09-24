@@ -33,3 +33,43 @@ export const createQuestionBody = z.object({
   message: 'exactly one option must be correct', path: ['options'],
 });
 export type CreateQuestionBody = z.infer<typeof createQuestionBody>;
+
+export const saveAnswerBody = z.object({
+  selectedOptionId: z.number().int().positive().nullable(),
+});
+export type SaveAnswerBody = z.infer<typeof saveAnswerBody>;
+
+export const answerParams = z.object({
+  id: z.coerce.number().int().positive(),
+  questionId: z.coerce.number().int().positive(),
+});
+export type AnswerParams = z.infer<typeof answerParams>;
+
+export const createClassBody = z.object({ name: z.string().min(1).max(32) });
+export type CreateClassBody = z.infer<typeof createClassBody>;
+
+export const createUserBody = z.object({
+  role: z.enum(['student', 'teacher', 'principal']),
+  fullName: z.string().min(1).max(200),
+  loginCode: z.string().min(1).max(64),
+  password: z.string().min(6).max(256),
+  locale: z.enum(['en', 'ar']),
+  classId: z.number().int().positive().optional(),
+}).refine((u) => (u.role === 'student') === (u.classId !== undefined), {
+  message: 'students need a class; staff must not have one', path: ['classId'],
+});
+export type CreateUserBody = z.infer<typeof createUserBody>;
+
+export const resetPasswordBody = z.object({ password: z.string().min(6).max(256) });
+
+export const assignmentsBody = z.object({
+  teacherId: z.number().int().positive(),
+  classIds: z.array(z.number().int().positive()),
+});
+export type AssignmentsBody = z.infer<typeof assignmentsBody>;
+
+export const importBody = z.object({
+  kind: z.enum(['students', 'teachers']),
+  csv: z.string().min(1).max(2_000_000),
+});
+export type ImportBody = z.infer<typeof importBody>;

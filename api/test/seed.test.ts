@@ -55,6 +55,17 @@ describe('seed', () => {
       .toBeGreaterThanOrEqual(2);
   });
 
+  it('gives every class at least one open quiz, so any student login has something to sit', async () => {
+    // Counting open quizzes globally is not enough: they can all target the same
+    // classes and leave a whole class with nothing to do on first login.
+    expect(await count(
+      `SELECT count(*) c FROM classes c
+        WHERE NOT EXISTS (
+          SELECT 1 FROM quiz_classes qc JOIN quizzes q ON q.id = qc.quiz_id
+           WHERE qc.class_id = c.id AND q.is_published AND now() BETWEEN q.opens_at AND q.closes_at)`))
+      .toBe(0);
+  });
+
   it('ships a quiz that has not opened yet', async () => {
     expect(await count(`SELECT count(*) c FROM quizzes WHERE opens_at > now()`)).toBeGreaterThanOrEqual(1);
   });
