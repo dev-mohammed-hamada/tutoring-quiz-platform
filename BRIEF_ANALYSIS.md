@@ -218,6 +218,11 @@ literally it is per-student outcomes; read as a centre owner would mean it, it i
 The client is unavailable for questions, so every gap has to be closed by a decision that is then
 written down. This table is the raw material for `DECISIONS.md`.
 
+> **These are the questions as first identified, with the defaults recommended at analysis time.**
+> All of them were subsequently resolved — with the client amending several — in
+> [`docs/superpowers/specs/2026-09-24-tutoring-quiz-platform-design.md`](docs/superpowers/specs/2026-09-24-tutoring-quiz-platform-design.md) §2.
+> Where that spec and this table disagree, the spec is what was built.
+
 | # | Open question | Why it matters | Recommended default |
 |---|---|---|---|
 | `Q-01` | How do students log in — email, student code, username? | Students are minors on phones; many have no email. | Student code / username + password, issued from the roster. Teachers and owner use email. |
