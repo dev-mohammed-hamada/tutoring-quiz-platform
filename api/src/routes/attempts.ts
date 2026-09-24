@@ -6,6 +6,7 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { canStart, canSaveAnswer, attemptState, type StartRefusal } from '../domain/attempt.js';
 import { gradeAnswer } from '../domain/scoring.js';
 import { serializeQuestionForAttempt } from '../serializers/attempt.js';
+import { serializeLockedResult, serializeUnlockedResult } from '../serializers/result.js';
 
 export const attemptRoutes = Router();
 
@@ -193,4 +194,77 @@ attemptRoutes.post('/attempts/:id/submit', ...student, validate({ params: idPara
   const attempt = rows[0];
   if (!attempt) { res.status(404).json({ error: 'not_found' }); return; }
   res.json({ displayScore: attempt.display_score, maxScore: attempt.max_score });
+});
+
+attemptRoutes.get('/attempts/:id/result', ...student, validate({ params: idParam }), async (req, res) => {
+  const { id } = req.params as unknown as { id: number };
+  const user = req.user!;
+
+  const { rows: [attempt] } = await pool.query(
+    `SELECT a.id, a.quiz_id, a.submitted_at, a.display_score, a.max_score, q.closes_at
+       FROM attempts a JOIN quizzes q ON q.id = a.quiz_id
+      WHERE a.id = $1 AND a.student_id = $2`, [id, user.id]);
+  if (!attempt) { res.status(404).json({ error: 'not_found' }); return; }
+  if (!attempt.submitted_at) { res.status(409).json({ error: 'attempt_in_progress' }); return; }
+
+  // The close date is the gate: the mark comes back now, the paper is gone over
+  // once nobody else can still be sitting it.
+  const released = new Date() >= attempt.closes_at;
+
+  if (!released) {
+    res.json(serializeLockedResult({
+      displayScore: attempt.display_score,
+      maxScore: attempt.max_score,
+      closesAt: attempt.closes_at,
+    }));
+    return;
+  }
+
+  const { rows: questions } = await pool.query(
+    `SELECT qq.id, qq.position, qq.text, qq.points,
+            (SELECT o.id FROM options o WHERE o.question_id = qq.id AND o.is_correct) AS correct_option_id,
+            ans.selected_option_id AS your_option_id,
+            COALESCE(ans.points_awarded, 0)::int AS awarded,
+            (SELECT json_agg(json_build_object('id', o.id, 'position', o.position, 'text', o.text)
+                             ORDER BY o.position)
+               FROM options o WHERE o.question_id = qq.id) AS options
+       FROM questions qq
+       LEFT JOIN answers ans ON ans.question_id = qq.id AND ans.attempt_id = $2
+      WHERE qq.quiz_id = $1
+      ORDER BY qq.position`, [attempt.quiz_id, id]);
+
+  res.json(serializeUnlockedResult({
+    displayScore: attempt.display_score,
+    maxScore: attempt.max_score,
+    questions: questions.map((q) => ({
+      id: q.id, position: q.position, text: q.text, points: q.points,
+      yourOptionId: q.your_option_id ?? null,
+      correctOptionId: q.correct_option_id,
+      awarded: q.awarded,
+      options: q.options,
+    })),
+  }));
+});
+
+attemptRoutes.get('/students/me/history', ...student, async (req, res) => {
+  const user = req.user!;
+  const { rows } = await pool.query(
+    `SELECT a.id, a.quiz_id, a.display_score, a.max_score, a.submitted_at, a.submitted_reason,
+            q.title, q.language, q.closes_at, (now() >= q.closes_at) AS review_released
+       FROM attempts a JOIN quizzes q ON q.id = a.quiz_id
+      WHERE a.student_id = $1 AND a.submitted_at IS NOT NULL
+      ORDER BY a.submitted_at DESC`, [user.id]);
+
+  res.json(rows.map((r) => ({
+    attemptId: r.id,
+    quizId: r.quiz_id,
+    title: r.title,
+    language: r.language,
+    displayScore: r.display_score,
+    maxScore: r.max_score,
+    submittedAt: r.submitted_at.toISOString(),
+    submittedReason: r.submitted_reason,
+    reviewReleased: r.review_released,
+    reviewAvailableAt: r.closes_at.toISOString(),
+  })));
 });
