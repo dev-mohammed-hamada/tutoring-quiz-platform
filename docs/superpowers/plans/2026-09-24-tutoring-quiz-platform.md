@@ -49,6 +49,10 @@ Test fixtures in `api/test/helpers/world.ts` use different codes (`teacher-samir
 
 ### Deviations from this plan that Phase 4 must respect
 
+- **The narrowest real Chrome window on macOS is 400px, not 375.** The OS clamps it, so the
+  in-browser check runs at 400. There are no width breakpoints, so this is representative; a true
+  375px check belongs to the Playwright run in Task 18, which sets the viewport directly.
+
 - ~~Workspaces are `["shared", "api"]` only.~~ **Done in Task 14:** `web` is in the root
   `workspaces`, in `build`/`dev`/`test`, and in both Dockerfile stages.
 - **`web` pins Vite 5, not 6.** Vitest 2 hoists Vite 5 to the root; a second copy at Vite 6 made
@@ -81,10 +85,6 @@ until that test is written against the new PUT.
 
 ### Still open
 
-- **Nobody has looked at the web app in a browser yet.** Task 14's Step 10 visual pass at 375px —
-  language toggle, full layout mirroring — was not performed: the browser tooling was unavailable
-  on the dev machine. The behaviour is covered by `web/test/login.test.tsx`, but the *look* is not.
-  Do this before Task 15 builds on the shell.
 - `docker compose up` has never been run. It must be, from a clean clone, before submission.
 - `data/` quiz content is machine-checked (15 questions, 20 marks, answers spread across a–d, no
   duplicate options). The Arabic wording has not been reviewed by a native speaker.
@@ -2877,7 +2877,7 @@ if (existsSync(webDist)) {
 
 `LoginPage.tsx`: a single card, one `login code` field, one `password` field, a submit button at `--tap` height, and `<LanguageToggle />` in the header. On success, route by role — student → `/quizzes`, teacher → `/teach`, principal → `/admin`. On 401 show one neutral message; never distinguish unknown user from wrong password.
 
-- [x] **Step 10: Run the tests, then look at it**  *(tests run; the browser pass at 375px is still outstanding — see Still open)*
+- [x] **Step 10: Run the tests, then look at it**
 
 Run: `npm test -w web`
 Expected: PASS, 4 tests.
