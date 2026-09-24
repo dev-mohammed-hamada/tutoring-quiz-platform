@@ -177,3 +177,8 @@ fieldset { margin: 0; }
 textarea.field { min-block-size: auto; resize: vertical; }
 select.field { appearance: auto; }
 legend { color: var(--ink-muted); font-size: var(--step--1); }
+
+.tabs--scroll { overflow-x: auto; }
+.tabs button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
+.csv { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--step--1); }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--step--1); }

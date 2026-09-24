@@ -175,3 +175,23 @@ export interface ClassReport {
   negativeMarking: boolean;
   students: ReportStudent[];
 }
+
+export interface AdminClass { id: number; name: string; studentCount: number }
+
+export interface AdminUser {
+  id: number;
+  role: Role;
+  fullName: string;
+  loginCode: string;
+  locale: Locale;
+  isActive: boolean;
+  classId: number | null;
+  className: string | null;
+  assignedClassIds: number[];
+}
+
+export interface ImportResult {
+  created: number;
+  updated: number;
+  errors: { line: number; message: string }[];
+}

@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { DirectionProvider } from './components/DirectionProvider';
 import { useSession } from './auth/SessionProvider';
 import { LoginPage } from './pages/LoginPage';
-import { AppHeader } from './components/AppHeader';
 import { QuizListPage } from './pages/QuizListPage';
 import { AttemptPage } from './pages/AttemptPage';
 import { ResultPage } from './pages/ResultPage';
@@ -11,6 +10,8 @@ import { HistoryPage } from './pages/HistoryPage';
 import { TeacherHomePage } from './pages/TeacherHomePage';
 import { QuizEditorPage } from './pages/QuizEditorPage';
 import { QuizReportPage } from './pages/QuizReportPage';
+import { AdminPage } from './pages/AdminPage';
+import { AdminImportPage } from './pages/AdminImportPage';
 import type { Role } from './api/types';
 
 const staff: Role[] = ['teacher', 'principal'];
@@ -37,16 +38,6 @@ function Loading() {
   return <main className="page"><p className="muted">{t('app.loading')}</p></main>;
 }
 
-/** Stand-in until Tasks 15-17 land the real screens. */
-function Soon({ title }: { title: string }) {
-  return (
-    <main className="page stack">
-      <AppHeader />
-      <h2>{title}</h2>
-    </main>
-  );
-}
-
 export default function App() {
   const { i18n } = useTranslation();
   const { user, loading } = useSession();
@@ -67,7 +58,8 @@ export default function App() {
         <Route path="/teach/quizzes/new" element={<RequireRole roles={staff}><QuizEditorPage /></RequireRole>} />
         <Route path="/teach/quizzes/:id" element={<RequireRole roles={staff}><QuizEditorPage /></RequireRole>} />
         <Route path="/teach/quizzes/:id/classes/:classId" element={<RequireRole roles={staff}><QuizReportPage /></RequireRole>} />
-        <Route path="/admin" element={<RequireRole roles={['principal']}><Soon title="Administration" /></RequireRole>} />
+        <Route path="/admin" element={<RequireRole roles={['principal']}><AdminPage /></RequireRole>} />
+        <Route path="/admin/import" element={<RequireRole roles={['principal']}><AdminImportPage /></RequireRole>} />
 
         <Route path="*" element={
           loading ? <Loading /> : <Navigate to={user ? HOME[user.role] : '/login'} replace />

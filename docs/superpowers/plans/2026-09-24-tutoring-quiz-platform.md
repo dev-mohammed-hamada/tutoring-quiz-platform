@@ -13,9 +13,9 @@
 
 ## Execution status — read this first
 
-**Updated 2026-09-25, Task 16 done.** Tasks 1–16 are done; 1–13 are merged to `main`. The suite is
-188 API tests (15 files) plus 29 web tests (6 files), clean `tsc` and a clean Vite build. Tasks 17–19
-remain. Work happens on `feat/v1`; merge to `main` with `--no-ff` at each phase boundary so `main`
+**Updated 2026-09-25, Phase 4 code complete.** Tasks 1–17 are done; 1–13 are merged to `main`. The
+suite is 188 API tests (15 files) plus 29 web tests (6 files), clean `tsc` and a clean Vite build.
+Tasks 18–19 remain, and one verification gap below must close before the phase merges. Work happens on `feat/v1`; merge to `main` with `--no-ff` at each phase boundary so `main`
 is always submittable.
 
 ### Running locally without Docker
@@ -91,9 +91,11 @@ upserts by `(question_id, position)` and clears `is_correct` first, which also k
 
 ### Still open
 
-- **The teacher screens have not been looked at in a browser.** Task 16 is covered by tests
-  (`web/test/editor.test.tsx`, plus the API suite), but the Chrome extension disconnected before the
-  visual pass over the home, editor and report screens. A `t-samir` session is already signed in.
+- **The staff screens have not been looked at in a browser.** Tasks 16 and 17 are covered by tests
+  (`web/test/editor.test.tsx` and the API suite) but not by eye: the teacher home, the editor, the
+  report table and both principal screens. Sign in as `principal` — that role reaches every one of
+  them, since `/teach` is staff-scoped — and walk the screens at a narrow width. The student flow
+  was checked this way and it found three real problems that tests had not.
 
 - **`quiz_dev` now has a submitted attempt for `10A-002` on القراءة والفهم**, created by Task 15's
   Step 5 walkthrough. The one-attempt rule means that student cannot sit it again; recreate
@@ -3066,15 +3068,15 @@ git commit -m "feat: teacher authoring and reporting screens"
 **Files:**
 - Create: `web/src/pages/AdminPage.tsx`, `web/src/pages/AdminImportPage.tsx`
 
-- [ ] **Step 1: Admin home**
+- [x] **Step 1: Admin home**
 
 Tabs for classes, users, and teacher assignments. Every quiz across the centre with its averages, since the principal's scope is unrestricted (D-07).
 
-- [ ] **Step 2: Import**
+- [x] **Step 2: Import**
 
 A textarea to paste CSV, plus a file input that reads the file client-side and posts its text. Results render as *created / updated* counts and a table of per-line errors. The header format for each `kind` is shown on the page so nobody has to open the docs.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A
