@@ -2,14 +2,22 @@
   "name": "tutoring-quiz-platform",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20" },
-  "workspaces": ["shared", "api"],
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "shared",
+    "api",
+    "web"
+  ],
   "scripts": {
     "start": "node api/dist/index.js",
-    "dev": "npm run dev -w api",
-    "build": "npm run build -w shared && npm run build -w api",
-    "test": "npm run test -w api",
+    "dev": "npm run dev -w api & npm run dev -w web",
+    "build": "npm run build -w shared && npm run build -w api && npm run build -w web",
+    "test": "npm run test -w api && npm run test -w web",
     "migrate": "npm run migrate -w api",
-    "seed": "npm run seed -w api"
+    "seed": "npm run seed -w api",
+    "dev:api": "npm run dev -w api",
+    "dev:web": "npm run dev -w web"
   }
 }

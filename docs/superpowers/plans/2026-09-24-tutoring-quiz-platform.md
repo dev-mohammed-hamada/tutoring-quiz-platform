@@ -13,9 +13,10 @@
 
 ## Execution status — read this first
 
-**Updated 2026-09-25, end of Phase 3.** Tasks 1–13 are done and merged to `main` (165 API tests,
-13 files, clean `tsc`). Phases 4–5 (Tasks 14–19) remain. Work happens on `feat/v1`; merge to `main`
-with `--no-ff` at each phase boundary so `main` is always submittable.
+**Updated 2026-09-25, Phase 4 code complete.** Tasks 1–17 are done; 1–13 are merged to `main`. The
+suite is 188 API tests (15 files) plus 29 web tests (6 files), clean `tsc` and a clean Vite build.
+Tasks 18–19 remain, and one verification gap below must close before the phase merges. Work happens on `feat/v1`; merge to `main` with `--no-ff` at each phase boundary so `main`
+is always submittable.
 
 ### Running locally without Docker
 
@@ -23,10 +24,14 @@ Docker is not installed on the dev machine yet. A local Postgres 14 runs on 5432
 
 ```bash
 export DATABASE_URL=postgres://mohammedhamada@localhost:5432/quiz_dev   # dev
-npm test -w api            # tests always use quiz_test via api/test/setup.ts
-npm run build              # tsc; Vitest does NOT typecheck, so run this before every commit
-npm run dev                # tsx watch; runs migrate + seed + sweeper on boot
+npm test                   # api (quiz_test via api/test/setup.ts) + web
+npm run build              # tsc + Vite; Vitest does NOT typecheck, so run this before every commit
+npm run dev                # API on :3000 (migrate + seed + sweeper) and Vite on :5173
 ```
+
+The API also serves the built SPA from `web/dist` when it exists, so `npm run build && npm start`
+gives the production shape on :3000 alone. `web/dist` is resolved from the API module's own
+location, not from `process.cwd()`, because the three ways of starting it have three cwds.
 
 The API does not load `.env` files; export `DATABASE_URL` yourself. `compose` publishes Postgres on
 host **5433**, not 5432.
@@ -44,8 +49,17 @@ Test fixtures in `api/test/helpers/world.ts` use different codes (`teacher-samir
 
 ### Deviations from this plan that Phase 4 must respect
 
-- **Workspaces are `["shared", "api"]` only.** Task 14 must add `"web"` to the root `workspaces`,
-  the root `build` and `dev` scripts, and the `Dockerfile` (build stage + `COPY --from=build /app/web/dist web/dist`).
+- **The narrowest real Chrome window on macOS is 400px, not 375.** The OS clamps it, so the
+  in-browser check runs at 400. There are no width breakpoints, so this is representative; a true
+  375px check belongs to the Playwright run in Task 18, which sets the viewport directly.
+
+- ~~Workspaces are `["shared", "api"]` only.~~ **Done in Task 14:** `web` is in the root
+  `workspaces`, in `build`/`dev`/`test`, and in both Dockerfile stages.
+- **`web` pins Vite 5, not 6.** Vitest 2 hoists Vite 5 to the root; a second copy at Vite 6 made
+  `@vitejs/plugin-react` typecheck against the wrong one. One copy in the tree, deliberately.
+- **Read `window.localStorage`, never the bare `localStorage` global.** Node 20+ ships its own
+  experimental one that shadows jsdom's under Vitest and has no `getItem`. `web/test/setup.ts`
+  restores a real Storage for tests.
 - **The implemented response shapes are the contract, not the plan's sketches.** Read
   `api/src/serializers/*.ts` and `api/src/routes/*.ts` before building a screen. In particular:
   student quiz `state` is one of `available | not_open_yet | closed | in_progress | expired | submitted`;
@@ -55,21 +69,37 @@ Test fixtures in `api/test/helpers/world.ts` use different codes (`teacher-samir
   branch must keep `$1::bigint` — a bare `TRUE` or an uncast `$1` breaks every principal query.
 - Express 5 makes `req.query` a getter; `validate()` installs parsed input with `defineProperty`.
 
-### API gaps Phase 4 must close first — add these in Task 14 / 16, test-first
+### API gaps Phase 4 closed
 
-| Gap | Needed by | Shape |
+All four are done, in Tasks 14 and 16:
+
+| Gap | Where | Note |
 |---|---|---|
-| `PATCH /api/me` `{ locale }` | Task 14 language toggle | persists `users.locale`; 204 |
-| `GET /api/me/classes` | Task 16 class picker | teacher → assigned classes; principal → all |
-| `GET /api/quizzes/:id` (staff, scoped) | Task 16 editor | quiz + questions + options **with** `isCorrect` — staff only |
-| `PATCH /api/quizzes/:id` and `PUT /api/quizzes/:id/questions/:qid` | Task 16 editor | **Missed in Task 7.** Spec §5 lists it |
+| `PATCH /api/me` `{ locale }` | Task 14 | `updateMeBody`; persists `users.locale`; 204 |
+| `GET /api/me/classes` | Task 16 | teacher → assigned, principal → all; 403 for a student |
+| `GET /api/quizzes/:id` (staff, scoped) | Task 16 | the only shape carrying `isCorrect`; `serializeQuizForAuthor` |
+| `PATCH /api/quizzes/:id`, `PUT /api/quizzes/:id/questions/:qid` | Task 16 | see the editing note below |
 
-The last row matters beyond the UI: **spec §11's test "editing a question leaves every recorded grade
-unchanged" does not exist yet**, because there was no edit path to test. The answer snapshots that
-guarantee it are in place (`answers.points_possible` / `points_awarded`), but the guarantee is unproven
-until that test is written against the new PUT.
+**Spec §11 is now proven.** `api/test/quiz-editing.test.ts` has the test that could not be written
+before: a student answers, the teacher then rewrites the question's text, marks and answer key, and
+every recorded grade is byte-identical afterwards.
+
+**Question options are updated in place, never replaced.** `answers.selected_option_id` references
+`options(id)` with no `ON DELETE`, so deleting an option a student picked fails outright. The PUT
+upserts by `(question_id, position)` and clears `is_correct` first, which also keeps the
+`one_correct_option` partial index satisfied at every statement boundary.
 
 ### Still open
+
+- **The staff screens have not been looked at in a browser.** Tasks 16 and 17 are covered by tests
+  (`web/test/editor.test.tsx` and the API suite) but not by eye: the teacher home, the editor, the
+  report table and both principal screens. Sign in as `principal` — that role reaches every one of
+  them, since `/teach` is staff-scoped — and walk the screens at a narrow width. The student flow
+  was checked this way and it found three real problems that tests had not.
+
+- **`quiz_dev` now has a submitted attempt for `10A-002` on القراءة والفهم**, created by Task 15's
+  Step 5 walkthrough. The one-attempt rule means that student cannot sit it again; recreate
+  `quiz_dev` to reseed if you want a clean student for a demo.
 
 - `docker compose up` has never been run. It must be, from a clean clone, before submission.
 - `data/` quiz content is machine-checked (15 questions, 20 marks, answers spread across a–d, no
@@ -2647,7 +2677,7 @@ git commit -m "feat: principal administration with spreadsheet import"
   - `<Text as="p">{userGeneratedString}</Text>` — renders with `dir="auto"`. **Every user-generated string in the app goes through this component** (D-22).
   - `apiFetch<T>(path, init?): Promise<T>` — throws `ApiError { status, code }` on non-2xx, always `credentials: 'include'`.
 
-- [ ] **Step 1: Write the failing direction test**
+- [x] **Step 1: Write the failing direction test**
 
 `web/test/direction.test.tsx`:
 ```tsx
@@ -2685,12 +2715,12 @@ describe('Text', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 Run: `npm test -w web`
 Expected: FAIL — cannot resolve `DirectionProvider`.
 
-- [ ] **Step 3: Implement direction and text**
+- [x] **Step 3: Implement direction and text**
 
 `web/src/components/DirectionProvider.tsx`:
 ```tsx
@@ -2721,7 +2751,7 @@ export function Text({ as: As = 'span', children, ...rest }:
 }
 ```
 
-- [ ] **Step 4: Write the design tokens — logical properties only**
+- [x] **Step 4: Write the design tokens — logical properties only**
 
 `web/src/styles/tokens.css`:
 ```css
@@ -2777,7 +2807,7 @@ body {
 
 > **Enforcement:** add `grep -rnE '(margin|padding|border)-(left|right)|text-align:\s*(left|right)' web/src` to the CI script as a failing check. This is the rule that decays silently otherwise.
 
-- [ ] **Step 5: Set up i18n**
+- [x] **Step 5: Set up i18n**
 
 `web/src/i18n/index.ts`:
 ```ts
@@ -2809,7 +2839,7 @@ export default i18n;
 }
 ```
 
-- [ ] **Step 6: Format numbers and dates correctly**
+- [x] **Step 6: Format numbers and dates correctly**
 
 `web/src/i18n/format.ts`:
 ```ts
@@ -2828,7 +2858,7 @@ export const formatDateTime = (iso: string, locale: string) =>
     { timeZone: TZ, dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso));
 ```
 
-- [ ] **Step 7: Vite config with the dev proxy**
+- [x] **Step 7: Vite config with the dev proxy**
 
 `web/vite.config.ts`:
 ```ts
@@ -2843,7 +2873,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 8: Serve the SPA from the API in production**
+- [x] **Step 8: Serve the SPA from the API in production**
 
 Modify `api/src/app.ts` — after the API routes, before the error handler:
 ```ts
@@ -2859,17 +2889,17 @@ if (existsSync(webDist)) {
 }
 ```
 
-- [ ] **Step 9: Build the login page**
+- [x] **Step 9: Build the login page**
 
 `LoginPage.tsx`: a single card, one `login code` field, one `password` field, a submit button at `--tap` height, and `<LanguageToggle />` in the header. On success, route by role — student → `/quizzes`, teacher → `/teach`, principal → `/admin`. On 401 show one neutral message; never distinguish unknown user from wrong password.
 
-- [ ] **Step 10: Run the tests, then look at it**
+- [x] **Step 10: Run the tests, then look at it**
 
 Run: `npm test -w web`
 Expected: PASS, 4 tests.
 Then: `npm run dev` and open `http://localhost:5173` at 375px width. Toggle the language and confirm the whole layout mirrors.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add -A
@@ -2888,7 +2918,7 @@ git commit -m "feat: web shell with bilingual RTL support and design tokens"
 **Interfaces:**
 - Produces: `<Countdown expiresAt={ISO} serverNow={ISO} onExpire={() => void} />`
 
-- [ ] **Step 1: Write the failing countdown test**
+- [x] **Step 1: Write the failing countdown test**
 
 The countdown is the only genuinely tricky component: it must be driven by the **server's** clock, not the device's.
 
@@ -2935,12 +2965,12 @@ describe('Countdown', () => {
 });
 ```
 
-- [ ] **Step 2: Run and watch it fail**
+- [x] **Step 2: Run and watch it fail**
 
 Run: `npm test -w web -- countdown`
 Expected: FAIL — cannot resolve `Countdown`.
 
-- [ ] **Step 3: Implement the countdown**
+- [x] **Step 3: Implement the countdown**
 
 `web/src/components/Countdown.tsx`:
 ```tsx
@@ -2976,7 +3006,7 @@ export function Countdown({ expiresAt, serverNow, onExpire }:
 }
 ```
 
-- [ ] **Step 4: Build the screens**
+- [x] **Step 4: Build the screens**
 
 **`QuizListPage`** — a card per quiz showing state from the API: *Open until \<date>* · *Opens \<date>* · *Closed* · *Completed — \<score>*. Only an open, untaken quiz gets a Start button. Titles render through `<Text>`.
 
@@ -2990,12 +3020,12 @@ export function Countdown({ expiresAt, serverNow, onExpire }:
 
 **`HistoryPage`** — a list of past attempts with scores and dates.
 
-- [ ] **Step 5: Run the tests and check it on a phone viewport**
+- [x] **Step 5: Run the tests and check it on a phone viewport**
 
 Run: `npm test -w web`
 Then: dev server at 375px. Start a quiz, answer, refresh mid-attempt — answers must still be there and the timer must have kept running.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
@@ -3010,21 +3040,21 @@ git commit -m "feat: student quiz flow with server-anchored countdown and autosa
 - Create: `web/src/pages/TeacherHomePage.tsx`, `web/src/pages/QuizEditorPage.tsx`, `web/src/pages/QuizReportPage.tsx`
 - Test: covered by E2E in Task 18
 
-- [ ] **Step 1: Teacher home**
+- [x] **Step 1: Teacher home**
 
 Lists the teacher's own quizzes with state and, for each, the class averages from `GET /api/reports/quizzes`. Clicking an average opens the drill-down (D-06).
 
-- [ ] **Step 2: Quiz editor**
+- [x] **Step 2: Quiz editor**
 
 Two panes on desktop, stacked on a phone. Quiz settings: title, language, time limit, open/close datetimes (entered in `Asia/Amman`, sent as UTC ISO), negative-marking toggle with helper text — *"Wrong answers deduct one third of the question's marks"* — and class checkboxes limited to the teacher's assigned classes.
 
 Question editor: text, points (entered in marks, sent as hundredths), four option rows with a radio for the correct one. Publishing surfaces the `422 problems[]` codes as readable messages against the offending question.
 
-- [ ] **Step 3: Report page**
+- [x] **Step 3: Report page**
 
 Class average at the top, a table of students below: name via `<Text>`, score, submitted time, and a clear marker for those who have not sat it.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A
@@ -3038,15 +3068,15 @@ git commit -m "feat: teacher authoring and reporting screens"
 **Files:**
 - Create: `web/src/pages/AdminPage.tsx`, `web/src/pages/AdminImportPage.tsx`
 
-- [ ] **Step 1: Admin home**
+- [x] **Step 1: Admin home**
 
 Tabs for classes, users, and teacher assignments. Every quiz across the centre with its averages, since the principal's scope is unrestricted (D-07).
 
-- [ ] **Step 2: Import**
+- [x] **Step 2: Import**
 
 A textarea to paste CSV, plus a file input that reads the file client-side and posts its text. Results render as *created / updated* counts and a table of per-line errors. The header format for each `kind` is shown on the page so nobody has to open the docs.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A
@@ -3140,19 +3170,10 @@ Honest and specific. What to cover: which tools · that the brief was decomposed
 
 - [ ] **Step 4: CLAUDE.md**
 
-Short and enforceable:
-```markdown
-# Project conventions
-
-- Marks are integer hundredths everywhere in the domain. 100 = 1.00 mark. Never floats.
-- Wrong-answer deduction is `Math.round(points / 3)`, applied per answer.
-- CSS uses logical properties only: `margin-inline-start`, never `margin-left`.
-- Every user-generated string renders through `<Text>`, which sets `dir="auto"`.
-- Responses are built by role-specific serializers. Never `delete` a field to hide it.
-- `options.is_correct` must never appear in an attempt or locked-result payload.
-- Reading another user's resource returns 404, not 403.
-- Tests first. Run them before claiming anything works.
-```
+Already written on 2026-09-25: root `CLAUDE.md` plus path-scoped `.claude/rules/api.md` and
+`.claude/rules/web.md`. Review it against what actually happened in Phases 4–5: delete lines
+Claude now gets right without being told, and add any correction that had to be made twice.
+Keep the root file well under 200 lines.
 
 - [ ] **Step 5: Final verification before submitting**
 

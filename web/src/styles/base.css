@@ -1,0 +1,184 @@
+/*
+ * IBM Plex Sans Arabic, self-hosted. It carries both scripts, so one family
+ * serves the whole interface and there is no request to a font CDN from a
+ * phone on Jordanian mobile data.
+ */
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSansArabic-400-arabic.woff2) format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSansArabic-400-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSansArabic-600-arabic.woff2) format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSansArabic-600-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0; font-family: var(--font); font-size: var(--step-0);
+  color: var(--ink); background: var(--surface-sunken);
+  -webkit-text-size-adjust: 100%;
+}
+
+h1, h2, h3 { margin-block: 0 var(--space-3); line-height: 1.25; }
+h1 { font-size: var(--step-2); }
+h2 { font-size: var(--step-1); }
+p { margin-block: 0; }
+
+.page { max-inline-size: 42rem; margin-inline: auto; padding-inline: var(--space-4); padding-block: var(--space-5); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-4); }
+.stack > * + * { margin-block-start: var(--space-4); }
+.stack--tight > * + * { margin-block-start: var(--space-2); }
+
+.row { display: flex; align-items: center; gap: var(--space-3); }
+.row--between { justify-content: space-between; }
+
+.muted { color: var(--ink-muted); font-size: var(--step--1); }
+.error { color: var(--danger); }
+
+label { display: block; font-size: var(--step--1); color: var(--ink-muted); margin-block-end: var(--space-1); }
+
+.field {
+  min-block-size: var(--tap); inline-size: 100%;
+  padding-inline: var(--space-3); padding-block: var(--space-2);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); color: var(--ink); font: inherit;
+}
+.field:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.btn {
+  min-block-size: var(--tap); inline-size: 100%;
+  padding-inline: var(--space-4); border-radius: var(--radius);
+  border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+  font: inherit; cursor: pointer;
+}
+.btn[disabled] { opacity: .6; cursor: default; }
+.btn--quiet { background: transparent; color: var(--accent); }
+.btn--auto { inline-size: auto; }
+
+/* Mirror directional icons rather than swapping assets. */
+[dir="rtl"] .icon-chevron { transform: scaleX(-1); }
+
+/* --- Student flow ------------------------------------------------------- */
+
+.list-plain { list-style: none; margin: 0; padding: 0; }
+
+.visually-hidden {
+  position: absolute; inline-size: 1px; block-size: 1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+
+.warn { color: var(--warn); }
+
+.tabs { gap: var(--space-2); }
+.tab {
+  min-block-size: var(--tap); display: inline-flex; align-items: center;
+  padding-inline: var(--space-3); border-radius: var(--radius);
+  color: var(--ink-muted); text-decoration: none;
+}
+.tab--on { background: var(--accent-sunken); color: var(--accent); }
+
+/* The bar stays put while the questions scroll under it, so the remaining time
+   is never more than a glance away on a phone. */
+.attempt__bar {
+  position: sticky; inset-block-start: 0; z-index: 1;
+  padding-block: var(--space-2);
+}
+.attempt__title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.countdown { font-variant-numeric: tabular-nums; font-size: var(--step-1); font-weight: 600; }
+
+.progress { inline-size: 100%; block-size: var(--space-2); }
+
+.question { border: 1px solid var(--line); }
+.question__text { font-size: var(--step-1); }
+
+.option {
+  display: flex; align-items: center; gap: var(--space-3);
+  min-block-size: var(--tap); padding-inline: var(--space-3); padding-block: var(--space-2);
+  border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer;
+}
+.option--on { border-color: var(--accent); background: var(--accent-sunken); }
+.option--static { cursor: default; }
+.option--right { border-color: var(--ok); background: var(--accent-sunken); }
+.option--wrong { border-color: var(--danger); background: var(--danger-sunken); }
+.option input { inline-size: 1.25rem; block-size: 1.25rem; accent-color: var(--accent); }
+
+.tags { margin-inline-start: auto; display: flex; gap: var(--space-2); flex-shrink: 0; }
+.tag { font-size: var(--step--1); }
+.tag--ok { color: var(--ok); }
+.tag--bad { color: var(--danger); }
+
+.score__value { font-size: var(--step-3); font-weight: 600; font-variant-numeric: tabular-nums; }
+.score__value--small { font-size: var(--step-1); }
+
+fieldset { margin: 0; }
+
+/* The confirmation has to arrive where the thumb already is. Appended in the
+   flow it landed below the fold on a phone, so it comes up as a sheet instead. */
+.confirm {
+  position: fixed; inset: 0; z-index: 2;
+  display: flex; align-items: flex-end;
+  background: rgb(18 32 43 / .45);
+  padding: var(--space-4);
+}
+.confirm__sheet { inline-size: 100%; max-inline-size: 42rem; margin-inline: auto; }
+
+/* --- Staff screens ------------------------------------------------------ */
+
+.pill {
+  font-size: var(--step--1); color: var(--ink-muted);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding-inline: var(--space-3); padding-block: var(--space-1);
+  white-space: nowrap;
+}
+.pill--on { color: var(--accent); border-color: var(--accent); background: var(--accent-sunken); }
+
+.rowlink {
+  min-block-size: var(--tap); text-decoration: none; color: var(--ink);
+  border-block-start: 1px solid var(--line); padding-block: var(--space-2); gap: var(--space-3);
+}
+.rowlink:hover { color: var(--accent); }
+
+/* A results table on a 375px screen scrolls rather than crushing the names. */
+.table-wrap { overflow-x: auto; }
+.table { border-collapse: collapse; inline-size: 100%; }
+.table th, .table td {
+  text-align: start; padding-inline: var(--space-2); padding-block: var(--space-2);
+  border-block-end: 1px solid var(--line); font-weight: 400; white-space: nowrap;
+}
+.table thead th { color: var(--ink-muted); font-size: var(--step--1); }
+.row--absent { color: var(--ink-muted); }
+
+.correct-pick { display: flex; align-items: center; gap: var(--space-1); white-space: nowrap; margin: 0; }
+textarea.field { min-block-size: auto; resize: vertical; }
+select.field { appearance: auto; }
+legend { color: var(--ink-muted); font-size: var(--step--1); }
+
+.tabs--scroll { overflow-x: auto; }
+.tabs button.tab { border: 0; background: none; font: inherit; cursor: pointer; }
+.csv { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--step--1); }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--step--1); }

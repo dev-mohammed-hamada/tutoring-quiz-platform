@@ -39,3 +39,7 @@ test-results/
 pgdata/
 *.sqlite
 *.sqlite3
+
+# Claude Code: personal and machine-local
+CLAUDE.local.md
+.claude/settings.local.json
