@@ -1,6 +1,8 @@
 import express from 'express';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import { authRoutes } from './routes/auth.js';
+import { errorHandler } from './middleware/errors.js';
 
 export function createApp() {
   const app = express();
@@ -12,5 +14,8 @@ export function createApp() {
     res.json({ status: 'ok' });
   });
 
+  app.use('/api', authRoutes);
+
+  app.use(errorHandler);   // must stay last
   return app;
 }
