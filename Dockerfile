@@ -17,5 +17,6 @@ COPY api/package.json api/
 RUN npm ci --omit=dev
 COPY --from=build /app/shared/dist shared/dist
 COPY --from=build /app/api/dist api/dist
+COPY data data
 EXPOSE 3000
 CMD ["node", "api/dist/index.js"]

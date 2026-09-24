@@ -1,0 +1,6 @@
+login_code,full_name,role,password,locale
+t-samir,سمير عودة,teacher,pass1234,ar
+t-rana,رنا مصطفى,teacher,pass1234,ar
+t-huda,هدى الزعبي,teacher,pass1234,ar
+t-george,George Sayegh,teacher,pass1234,en
+principal,نور العلي,principal,pass1234,ar

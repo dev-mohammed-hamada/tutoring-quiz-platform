@@ -1,0 +1,6 @@
+slug,title,author_login_code,language,time_limit_minutes,opens_at_offset_days,closes_at_offset_days,negative_marking,classes,questions_file
+algebra,Algebra Basics,t-samir,en,20,-10,-3,false,10A|10B,quiz-algebra-en.csv
+nahw,النحو العربي,t-samir,ar,20,-9,-2,true,10A,quiz-nahw-ar.csv
+geometry,Geometry,t-george,en,25,-1,6,true,10B|11A,quiz-geometry-en.csv
+tareekh,تاريخ الأردن,t-huda,ar,20,-1,6,false,11A,quiz-tareekh-ar.csv
+qiraa,القراءة والفهم,t-rana,ar,15,3,10,false,10A,quiz-qiraa-ar.csv
