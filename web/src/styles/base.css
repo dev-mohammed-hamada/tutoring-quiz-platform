@@ -146,3 +146,34 @@ fieldset { margin: 0; }
   padding: var(--space-4);
 }
 .confirm__sheet { inline-size: 100%; max-inline-size: 42rem; margin-inline: auto; }
+
+/* --- Staff screens ------------------------------------------------------ */
+
+.pill {
+  font-size: var(--step--1); color: var(--ink-muted);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding-inline: var(--space-3); padding-block: var(--space-1);
+  white-space: nowrap;
+}
+.pill--on { color: var(--accent); border-color: var(--accent); background: var(--accent-sunken); }
+
+.rowlink {
+  min-block-size: var(--tap); text-decoration: none; color: var(--ink);
+  border-block-start: 1px solid var(--line); padding-block: var(--space-2); gap: var(--space-3);
+}
+.rowlink:hover { color: var(--accent); }
+
+/* A results table on a 375px screen scrolls rather than crushing the names. */
+.table-wrap { overflow-x: auto; }
+.table { border-collapse: collapse; inline-size: 100%; }
+.table th, .table td {
+  text-align: start; padding-inline: var(--space-2); padding-block: var(--space-2);
+  border-block-end: 1px solid var(--line); font-weight: 400; white-space: nowrap;
+}
+.table thead th { color: var(--ink-muted); font-size: var(--step--1); }
+.row--absent { color: var(--ink-muted); }
+
+.correct-pick { display: flex; align-items: center; gap: var(--space-1); white-space: nowrap; margin: 0; }
+textarea.field { min-block-size: auto; resize: vertical; }
+select.field { appearance: auto; }
+legend { color: var(--ink-muted); font-size: var(--step--1); }

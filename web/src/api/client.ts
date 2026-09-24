@@ -1,5 +1,7 @@
 export class ApiError extends Error {
-  constructor(readonly status: number, readonly code: string, readonly details?: unknown) {
+  /** The whole parsed body: some refusals carry more than a code, e.g. the
+   *  `problems[]` a 422 from publish uses to name the offending question. */
+  constructor(readonly status: number, readonly code: string, readonly body?: Record<string, unknown>) {
     super(`${status} ${code}`);
     this.name = 'ApiError';
   }
@@ -28,8 +30,8 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 
   if (res.status === 204) return undefined as T;
 
-  const body = await res.json().catch(() => null) as { error?: string; details?: unknown } | null;
-  if (!res.ok) throw new ApiError(res.status, body?.error ?? 'error', body?.details);
+  const body = await res.json().catch(() => null) as Record<string, unknown> | null;
+  if (!res.ok) throw new ApiError(res.status, String(body?.error ?? 'error'), body ?? undefined);
   return body as T;
 }
 

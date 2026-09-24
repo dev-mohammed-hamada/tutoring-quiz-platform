@@ -28,6 +28,19 @@ export function AppHeader() {
       </div>
       {user && <Text as="p" className="muted">{user.fullName}</Text>}
 
+      {user && user.role !== 'student' && (
+        <nav className="row tabs">
+          <NavLink to="/teach" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
+            {t('nav.teach')}
+          </NavLink>
+          {user.role === 'principal' && (
+            <NavLink to="/admin" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>
+              {t('nav.admin')}
+            </NavLink>
+          )}
+        </nav>
+      )}
+
       {user?.role === 'student' && (
         <nav className="row tabs">
           <NavLink to="/quizzes" className={({ isActive }) => `tab${isActive ? ' tab--on' : ''}`}>

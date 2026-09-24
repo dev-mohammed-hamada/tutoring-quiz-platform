@@ -96,3 +96,82 @@ export interface HistoryEntry {
   reviewReleased: boolean;
   reviewAvailableAt: string;
 }
+
+export interface ClassRef { id: number; name: string }
+
+/** GET /api/quizzes as staff. */
+export interface TeacherQuiz {
+  id: number;
+  title: string;
+  language: Locale;
+  timeLimitMinutes: number;
+  opensAt: string;
+  closesAt: string;
+  negativeMarking: boolean;
+  isPublished: boolean;
+  classIds: number[];
+  questionCount: number;
+  totalMarks: number;
+}
+
+export interface AuthorOption { id: number; position: number; text: string; isCorrect: boolean }
+
+export interface AuthorQuestion {
+  id: number; position: number; text: string; points: number; options: AuthorOption[];
+}
+
+/** GET /api/quizzes/:id as staff - the only shape that carries the answer key. */
+export interface AuthorQuiz {
+  id: number;
+  title: string;
+  language: Locale;
+  timeLimitMinutes: number;
+  opensAt: string;
+  closesAt: string;
+  negativeMarking: boolean;
+  isPublished: boolean;
+  classIds: number[];
+  totalMarks: number;
+  questions: AuthorQuestion[];
+}
+
+export interface ClassAverage {
+  classId: number;
+  name: string;
+  averageDisplayScore: number | null;
+  averageLabel: string | null;
+  maxScore: number;
+  submitted: number;
+  total: number;
+}
+
+export interface QuizReport {
+  quizId: number;
+  title: string;
+  language: Locale;
+  negativeMarking: boolean;
+  opensAt: string;
+  closesAt: string;
+  maxScore: number;
+  classes: ClassAverage[];
+}
+
+export interface ReportStudent {
+  id: number;
+  fullName: string;
+  state: 'not_started' | 'in_progress' | 'expired' | 'submitted';
+  displayScore: number | null;
+  displayScoreLabel: string | null;
+  submittedAt: string | null;
+  submittedReason: 'manual' | 'expiry' | null;
+  /** Principal only - a teacher's payload does not carry this field at all. */
+  rawScore?: number | null;
+}
+
+export interface ClassReport {
+  quizId: number;
+  title: string;
+  maxScore: number;
+  negativeMarking: boolean;
+  students: ReportStudent[];
+}

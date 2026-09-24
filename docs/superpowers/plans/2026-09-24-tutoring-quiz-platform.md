@@ -13,8 +13,8 @@
 
 ## Execution status — read this first
 
-**Updated 2026-09-25, Task 15 done.** Tasks 1–15 are done; 1–13 are merged to `main`. The suite is
-174 API tests (14 files) plus 17 web tests (4 files), clean `tsc` and a clean Vite build. Tasks 16–19
+**Updated 2026-09-25, Task 16 done.** Tasks 1–16 are done; 1–13 are merged to `main`. The suite is
+188 API tests (15 files) plus 29 web tests (6 files), clean `tsc` and a clean Vite build. Tasks 17–19
 remain. Work happens on `feat/v1`; merge to `main` with `--no-ff` at each phase boundary so `main`
 is always submittable.
 
@@ -69,21 +69,31 @@ Test fixtures in `api/test/helpers/world.ts` use different codes (`teacher-samir
   branch must keep `$1::bigint` — a bare `TRUE` or an uncast `$1` breaks every principal query.
 - Express 5 makes `req.query` a getter; `validate()` installs parsed input with `defineProperty`.
 
-### API gaps Phase 4 must close first — add these in Task 14 / 16, test-first
+### API gaps Phase 4 closed
 
-| Gap | Needed by | Shape |
+All four are done, in Tasks 14 and 16:
+
+| Gap | Where | Note |
 |---|---|---|
-| ~~`PATCH /api/me` `{ locale }`~~ | ~~Task 14~~ | **Done in Task 14.** `updateMeBody` in `shared`; 204 |
-| `GET /api/me/classes` | Task 16 class picker | teacher → assigned classes; principal → all |
-| `GET /api/quizzes/:id` (staff, scoped) | Task 16 editor | quiz + questions + options **with** `isCorrect` — staff only |
-| `PATCH /api/quizzes/:id` and `PUT /api/quizzes/:id/questions/:qid` | Task 16 editor | **Missed in Task 7.** Spec §5 lists it |
+| `PATCH /api/me` `{ locale }` | Task 14 | `updateMeBody`; persists `users.locale`; 204 |
+| `GET /api/me/classes` | Task 16 | teacher → assigned, principal → all; 403 for a student |
+| `GET /api/quizzes/:id` (staff, scoped) | Task 16 | the only shape carrying `isCorrect`; `serializeQuizForAuthor` |
+| `PATCH /api/quizzes/:id`, `PUT /api/quizzes/:id/questions/:qid` | Task 16 | see the editing note below |
 
-The last row matters beyond the UI: **spec §11's test "editing a question leaves every recorded grade
-unchanged" does not exist yet**, because there was no edit path to test. The answer snapshots that
-guarantee it are in place (`answers.points_possible` / `points_awarded`), but the guarantee is unproven
-until that test is written against the new PUT.
+**Spec §11 is now proven.** `api/test/quiz-editing.test.ts` has the test that could not be written
+before: a student answers, the teacher then rewrites the question's text, marks and answer key, and
+every recorded grade is byte-identical afterwards.
+
+**Question options are updated in place, never replaced.** `answers.selected_option_id` references
+`options(id)` with no `ON DELETE`, so deleting an option a student picked fails outright. The PUT
+upserts by `(question_id, position)` and clears `is_correct` first, which also keeps the
+`one_correct_option` partial index satisfied at every statement boundary.
 
 ### Still open
+
+- **The teacher screens have not been looked at in a browser.** Task 16 is covered by tests
+  (`web/test/editor.test.tsx`, plus the API suite), but the Chrome extension disconnected before the
+  visual pass over the home, editor and report screens. A `t-samir` session is already signed in.
 
 - **`quiz_dev` now has a submitted attempt for `10A-002` on القراءة والفهم**, created by Task 15's
   Step 5 walkthrough. The one-attempt rule means that student cannot sit it again; recreate
@@ -3028,21 +3038,21 @@ git commit -m "feat: student quiz flow with server-anchored countdown and autosa
 - Create: `web/src/pages/TeacherHomePage.tsx`, `web/src/pages/QuizEditorPage.tsx`, `web/src/pages/QuizReportPage.tsx`
 - Test: covered by E2E in Task 18
 
-- [ ] **Step 1: Teacher home**
+- [x] **Step 1: Teacher home**
 
 Lists the teacher's own quizzes with state and, for each, the class averages from `GET /api/reports/quizzes`. Clicking an average opens the drill-down (D-06).
 
-- [ ] **Step 2: Quiz editor**
+- [x] **Step 2: Quiz editor**
 
 Two panes on desktop, stacked on a phone. Quiz settings: title, language, time limit, open/close datetimes (entered in `Asia/Amman`, sent as UTC ISO), negative-marking toggle with helper text — *"Wrong answers deduct one third of the question's marks"* — and class checkboxes limited to the teacher's assigned classes.
 
 Question editor: text, points (entered in marks, sent as hundredths), four option rows with a radio for the correct one. Publishing surfaces the `422 problems[]` codes as readable messages against the offending question.
 
-- [ ] **Step 3: Report page**
+- [x] **Step 3: Report page**
 
 Class average at the top, a table of students below: name via `<Text>`, score, submitted time, and a clear marker for those who have not sat it.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A

@@ -76,3 +76,25 @@ export type ImportBody = z.infer<typeof importBody>;
 
 export const updateMeBody = z.object({ locale: z.enum(['en', 'ar']) });
 export type UpdateMeBody = z.infer<typeof updateMeBody>;
+
+/**
+ * Every field optional: this is a patch. The ordering invariant between opensAt
+ * and closesAt cannot live here, because a patch may carry only one of them —
+ * the route checks it against the merged result instead.
+ */
+export const updateQuizBody = z.object({
+  title: z.string().min(1).max(200).optional(),
+  language: z.enum(['en', 'ar']).optional(),
+  timeLimitMinutes: z.number().int().min(1).max(300).optional(),
+  opensAt: z.string().datetime().optional(),
+  closesAt: z.string().datetime().optional(),
+  negativeMarking: z.boolean().optional(),
+  classIds: z.array(z.number().int().positive()).min(1).optional(),
+});
+export type UpdateQuizBody = z.infer<typeof updateQuizBody>;
+
+export const questionParams = z.object({
+  id: z.coerce.number().int().positive(),
+  questionId: z.coerce.number().int().positive(),
+});
+export type QuestionParams = z.infer<typeof questionParams>;

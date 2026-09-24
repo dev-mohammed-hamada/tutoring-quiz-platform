@@ -8,7 +8,12 @@ import { QuizListPage } from './pages/QuizListPage';
 import { AttemptPage } from './pages/AttemptPage';
 import { ResultPage } from './pages/ResultPage';
 import { HistoryPage } from './pages/HistoryPage';
+import { TeacherHomePage } from './pages/TeacherHomePage';
+import { QuizEditorPage } from './pages/QuizEditorPage';
+import { QuizReportPage } from './pages/QuizReportPage';
 import type { Role } from './api/types';
+
+const staff: Role[] = ['teacher', 'principal'];
 
 /** Where each role lands after signing in. */
 const HOME: Record<Role, string> = {
@@ -58,7 +63,10 @@ export default function App() {
         <Route path="/attempts/:id" element={<RequireRole roles={['student']}><AttemptPage /></RequireRole>} />
         <Route path="/attempts/:id/result" element={<RequireRole roles={['student']}><ResultPage /></RequireRole>} />
         <Route path="/history" element={<RequireRole roles={['student']}><HistoryPage /></RequireRole>} />
-        <Route path="/teach" element={<RequireRole roles={['teacher', 'principal']}><Soon title="My quizzes" /></RequireRole>} />
+        <Route path="/teach" element={<RequireRole roles={staff}><TeacherHomePage /></RequireRole>} />
+        <Route path="/teach/quizzes/new" element={<RequireRole roles={staff}><QuizEditorPage /></RequireRole>} />
+        <Route path="/teach/quizzes/:id" element={<RequireRole roles={staff}><QuizEditorPage /></RequireRole>} />
+        <Route path="/teach/quizzes/:id/classes/:classId" element={<RequireRole roles={staff}><QuizReportPage /></RequireRole>} />
         <Route path="/admin" element={<RequireRole roles={['principal']}><Soon title="Administration" /></RequireRole>} />
 
         <Route path="*" element={
