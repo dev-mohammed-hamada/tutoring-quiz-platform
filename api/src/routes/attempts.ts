@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { idParam } from '@quiz/shared';
+import { idParam, saveAnswerBody, answerParams } from '@quiz/shared';
 import { pool } from '../db/pool.js';
 import { validate } from '../middleware/validate.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
-import { canStart, attemptState, type StartRefusal } from '../domain/attempt.js';
+import { canStart, canSaveAnswer, attemptState, type StartRefusal } from '../domain/attempt.js';
+import { gradeAnswer } from '../domain/scoring.js';
 import { serializeQuestionForAttempt } from '../serializers/attempt.js';
 
 export const attemptRoutes = Router();
@@ -116,3 +117,56 @@ attemptRoutes.get('/attempts/:id', ...student, validate({ params: idParam }), as
     })),
   });
 });
+
+attemptRoutes.put('/attempts/:id/answers/:questionId', ...student,
+  validate({ params: answerParams, body: saveAnswerBody }), async (req, res) => {
+    const { id, questionId } = req.params as unknown as { id: number; questionId: number };
+    const { selectedOptionId } = req.body as { selectedOptionId: number | null };
+    const user = req.user!;
+
+    // 1. The attempt must exist and belong to the caller. Anything else is 404 -
+    //    a 403 would confirm that someone else's attempt has this id.
+    const { rows: [attempt] } = await pool.query(
+      `SELECT a.id, a.quiz_id, a.expires_at, a.submitted_at, q.negative_marking
+         FROM attempts a JOIN quizzes q ON q.id = a.quiz_id
+        WHERE a.id = $1 AND a.student_id = $2`, [id, user.id]);
+    if (!attempt) { res.status(404).json({ error: 'not_found' }); return; }
+
+    // 2. Still open, allowing the latency grace.
+    if (!canSaveAnswer({ expiresAt: attempt.expires_at, submittedAt: attempt.submitted_at }, new Date())) {
+      res.status(409).json({ error: 'attempt_closed' });
+      return;
+    }
+
+    // 3. The question must belong to this attempt's quiz.
+    const { rows: [question] } = await pool.query(
+      `SELECT id, points FROM questions WHERE id = $1 AND quiz_id = $2`, [questionId, attempt.quiz_id]);
+    if (!question) { res.status(400).json({ error: 'question_not_in_quiz' }); return; }
+
+    // 4. The option, if any, must belong to that question. This is the check that
+    //    stops an answer being smuggled in from a different question.
+    let isCorrect: boolean | null = null;
+    if (selectedOptionId !== null) {
+      const { rows: [option] } = await pool.query(
+        `SELECT is_correct FROM options WHERE id = $1 AND question_id = $2`,
+        [selectedOptionId, questionId]);
+      if (!option) { res.status(400).json({ error: 'option_not_in_question' }); return; }
+      isCorrect = option.is_correct;
+    }
+
+    const awarded = gradeAnswer(question.points, isCorrect, attempt.negative_marking);
+
+    // 5. Snapshot both the value and the award, so a later edit to the question
+    //    cannot move a grade that has already been recorded.
+    await pool.query(
+      `INSERT INTO answers(attempt_id, question_id, selected_option_id, points_possible, points_awarded)
+       VALUES ($1,$2,$3,$4,$5)
+       ON CONFLICT (attempt_id, question_id) DO UPDATE
+         SET selected_option_id = EXCLUDED.selected_option_id,
+             points_possible    = EXCLUDED.points_possible,
+             points_awarded     = EXCLUDED.points_awarded,
+             answered_at        = now()`,
+      [id, questionId, selectedOptionId, question.points, awarded]);
+
+    res.json({ saved: true });
+  });

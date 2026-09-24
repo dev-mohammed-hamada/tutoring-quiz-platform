@@ -33,3 +33,14 @@ export const createQuestionBody = z.object({
   message: 'exactly one option must be correct', path: ['options'],
 });
 export type CreateQuestionBody = z.infer<typeof createQuestionBody>;
+
+export const saveAnswerBody = z.object({
+  selectedOptionId: z.number().int().positive().nullable(),
+});
+export type SaveAnswerBody = z.infer<typeof saveAnswerBody>;
+
+export const answerParams = z.object({
+  id: z.coerce.number().int().positive(),
+  questionId: z.coerce.number().int().positive(),
+});
+export type AnswerParams = z.infer<typeof answerParams>;
