@@ -45,7 +45,9 @@ client made directly; `[E]` marks an engineering decision.
 | D-12 | **Exactly one correct option per question**, four options. | Matches the paper quizzes being replaced. `[E]` |
 | D-13 | No question or option shuffling in v1. | `[E]` |
 | D-14 | **Bilingual interface (en/ar) with a per-user preference**, full RTL flip; quiz content carries its own language independently. | The brief only promises Arabic *content* works, but a Jordanian student on a phone expects an Arabic interface. With CSS logical properties from the first commit the layout flip is nearly free; the real cost is ~80 translated strings. `[C]` |
-| D-15 | **React SPA + Fastify API + PostgreSQL, Docker Compose.** | The client-facing stack, literally. Keeps the domain logic in one isolated, testable server module — which is where this brief's difficulty lives. `[C]` |
+| D-15 | **React SPA + Express 5 API + PostgreSQL, Docker Compose.** | The client-facing stack, literally. Keeps the domain logic in one isolated, testable server module — which is where this brief's difficulty lives. Express over Fastify at the client's preference; Express 5 handles async errors natively, so no wrapper is needed. `[C]` |
+| D-24 | **`zod` schemas in `shared/`, used for both runtime validation and the TypeScript types.** Every request body and param is parsed at the route boundary; anything unparsed is rejected before it reaches a handler. | Express has no built-in schema validation, so the §11 adversarial cases (an option id from a different question, a malformed answer payload) need an explicit layer. Deriving the types from the same schemas means the contract and its enforcement cannot drift apart — a better story than the framework-bound alternative. `[E]` |
+| D-25 | `helmet` for security headers, `cookie-parser` for the session cookie, `pino-http` for request logging. | The pieces Express does not ship that the API needs anyway. `[E]` |
 | D-16 | **Server sessions in Postgres behind an httpOnly cookie**, not JWT. | Revocable, no token-expiry edge cases, trivially testable. `[E]` |
 | D-17 | **The seed data IS the import path.** Sample data lives as CSV in `data/`; the seeder parses it. | The real data arrives as spreadsheets, so seeder and importer are one code path. When the real files land, the work is column mapping, not building a pipeline. `[E]` |
 | D-18 | Seed runs automatically on first boot, idempotently. | Makes "one command" literally true. `npm run seed` is documented but not required. `[E]` |
@@ -71,18 +73,20 @@ tutoring-quiz-platform/
 ├── data/                       CSV seed = future import
 │   ├── classes.csv · teachers.csv · students.csv
 │   └── quiz-algebra-en.csv · quiz-nahw-ar.csv
-├── shared/                     TypeScript types only
+├── shared/                     zod schemas → types inferred (D-24)
 ├── api/src/
 │   ├── domain/                 scoring.ts, attempt.ts — pure, no I/O, no DB
 │   ├── db/                     migrations + queries
-│   ├── routes/ · auth/ · seed/
+│   ├── routes/ · auth/ · middleware/ · seed/
 └── web/src/
     ├── i18n/                   en.json · ar.json
     └── pages/ · components/
 ```
 
-`shared/` holds **types only**. Scoring lives in `api/src/domain/` and is physically
-unreachable from `web/`, so correct answers cannot leak to the client by accident.
+`shared/` holds **zod schemas and the types inferred from them** — the request and
+response contracts, and nothing else. Scoring lives in `api/src/domain/` and is
+physically unreachable from `web/`, so correct answers cannot leak to the client by
+accident.
 
 **Runtime — two containers.** `docker compose up` starts Postgres and one Node
 container serving both the API and the built React bundle at `http://localhost:3000`.
@@ -146,6 +150,9 @@ sessions(id, user_id, expires_at)
 ---
 
 ## 5. API surface
+
+Every route parses its input through a zod schema before the handler runs; a parse
+failure is a 400 and never reaches domain code.
 
 ```
 POST   /api/auth/login                   → session cookie
@@ -240,7 +247,7 @@ sees the reasoning and not just arithmetic:
 
 ## 8. Access control
 
-`requireAuth → requireRole(...) → resource guard`
+`helmet → cookie-parser → requireAuth → requireRole(...) → validate(schema) → resource guard`
 
 | | Student | Teacher | Principal |
 |---|---|---|---|
