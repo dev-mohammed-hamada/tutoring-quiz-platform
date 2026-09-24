@@ -12,12 +12,15 @@
   ],
   "scripts": {
     "start": "node api/dist/index.js",
-    "dev": "npm run dev -w api & npm run dev -w web",
+    "dev": "npm run dev:api & api=$!; trap 'kill $api 2>/dev/null' EXIT INT TERM; npm run dev:web",
     "build": "npm run build -w shared && npm run build -w api && npm run build -w web",
     "test": "npm run test -w api && npm run test -w web",
     "migrate": "npm run migrate -w api",
     "seed": "npm run seed -w api",
     "dev:api": "npm run dev -w api",
     "dev:web": "npm run dev -w web"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
   }
 }

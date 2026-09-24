@@ -27,6 +27,7 @@ npm test -w api               # all API tests, always against quiz_test (see api
 npm test -w api -- scoring    # one file by name; prefer this while iterating
 npm test -w web               # jsdom component tests
 npm test                      # both workspaces
+npx playwright test           # end-to-end at 375px; rebuilds quiz_e2e from the seed first
 npm run build                 # tsc for shared and api, then the Vite build for web
 npm run migrate
 npm run seed

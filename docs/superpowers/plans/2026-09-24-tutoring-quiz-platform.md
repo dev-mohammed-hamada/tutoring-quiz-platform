@@ -13,9 +13,10 @@
 
 ## Execution status — read this first
 
-**Updated 2026-09-25, Phase 4 code complete.** Tasks 1–17 are done; 1–13 are merged to `main`. The
-suite is 188 API tests (15 files) plus 29 web tests (6 files), clean `tsc` and a clean Vite build.
-Tasks 18–19 remain, and one verification gap below must close before the phase merges. Work happens on `feat/v1`; merge to `main` with `--no-ff` at each phase boundary so `main`
+**Updated 2026-09-25, Tasks 1–19 done bar one blocked step.** Everything through Task 19 is written
+and verified: 188 API tests, 29 web tests and 9 end-to-end tests at a 375px viewport, with a clean
+`tsc` and Vite build. The single outstanding item is Task 19's Step 5 — the `docker compose` run —
+which cannot be done on this machine. Work happens on `feat/v1`; merge to `main` with `--no-ff` at each phase boundary so `main`
 is always submittable.
 
 ### Running locally without Docker
@@ -91,17 +92,26 @@ upserts by `(question_id, position)` and clears `is_correct` first, which also k
 
 ### Still open
 
-- **The staff screens have not been looked at in a browser.** Tasks 16 and 17 are covered by tests
-  (`web/test/editor.test.tsx` and the API suite) but not by eye: the teacher home, the editor, the
-  report table and both principal screens. Sign in as `principal` — that role reaches every one of
-  them, since `/teach` is staff-scoped — and walk the screens at a narrow width. The student flow
-  was checked this way and it found three real problems that tests had not.
+- **`docker compose up` has still never been run**, and Task 19's Step 5 cannot be done without it:
+  there is no container runtime on this machine at all (no docker, colima or podman). It is the
+  reviewer's first command and the last unverified claim in the README.
+
+  Everything about that path that can be checked without a container has been:
+  - a fresh empty database booted with `npm run build && npm start` migrates, seeds 60 students,
+    4 teachers, a principal and 5 quizzes, serves the SPA and its fonts, and still 404s `/api/*`
+    misses — the same code path compose runs on first boot;
+  - the runtime stage's `npm ci --omit=dev --workspace @quiz/shared --workspace @quiz/api
+    --include-workspace-root` was run against a copy of the lockfile and succeeds;
+  - every `COPY` source in the Dockerfile exists after a build;
+  - `git clean -xdn` removes nothing the build needs.
+
+  What remains genuinely unproven is the container build itself: the base image, the layer copies
+  and compose's own wiring between the two services.
 
 - **`quiz_dev` now has a submitted attempt for `10A-002` on القراءة والفهم**, created by Task 15's
   Step 5 walkthrough. The one-attempt rule means that student cannot sit it again; recreate
   `quiz_dev` to reseed if you want a clean student for a demo.
 
-- `docker compose up` has never been run. It must be, from a clean clone, before submission.
 - `data/` quiz content is machine-checked (15 questions, 20 marks, answers spread across a–d, no
   duplicate options). The Arabic wording has not been reviewed by a native speaker.
 
@@ -3093,7 +3103,7 @@ git commit -m "feat: principal administration screens"
 - Create: `playwright.config.ts`, `e2e/student.spec.ts`, `e2e/teacher.spec.ts`, `e2e/rtl.spec.ts`
 - Create: `.github/workflows/ci.yml`
 
-- [ ] **Step 1: Playwright config at phone width**
+- [x] **Step 1: Playwright config at phone width**
 
 ```ts
 import { defineConfig, devices } from '@playwright/test';
@@ -3104,7 +3114,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 2: Write the three specs**
+- [x] **Step 2: Write the three specs**
 
 `student.spec.ts` — log in as a seeded student, open the Arabic quiz, answer every question, finish, assert a score is shown and that the answers are not yet revealed.
 
@@ -3122,12 +3132,12 @@ test('the interface mirrors when switched to Arabic, with no horizontal scroll',
 });
 ```
 
-- [ ] **Step 3: Run them**
+- [x] **Step 3: Run them**
 
 Run: `docker compose up -d && npx playwright test`
 Expected: 3 passing.
 
-- [ ] **Step 4: CI**
+- [x] **Step 4: CI**
 
 `.github/workflows/ci.yml` — Postgres service container, `npm ci`, `npm test`, and the logical-properties grep as a hard gate:
 ```yaml
@@ -3138,7 +3148,7 @@ Expected: 3 passing.
     fi
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -3152,30 +3162,30 @@ git commit -m "test: end-to-end coverage at phone width and CI pipeline"
 **Files:**
 - Create: `README.md`, `DECISIONS.md`, `AI_USAGE.md`, `CLAUDE.md`
 
-- [ ] **Step 1: README**
+- [x] **Step 1: README**
 
 Must contain, in this order: what it is in two lines · **the one command** (`docker compose up`) · the URL · **a login table** with a student, a teacher and the principal, with real seeded codes and passwords · how sample data loads and how to reload it · the no-Docker path if that is what shipped · the test commands · a short architecture note.
 
 Verify the login table by actually logging in as each of the three before committing.
 
-- [ ] **Step 2: DECISIONS.md**
+- [x] **Step 2: DECISIONS.md**
 
 Section 2 of the spec is the source. Structure it as: **assumptions made** (the decision register) · **built but not asked for** (bilingual interface, CSV import, principal role, the logical-properties CI gate — each with one line of why) · **deliberately left out** (spec §12's out-list) · **next week** (spec §13).
 
 Lead with the negative-marking amendment. A decision that was reconsidered, with the reasoning for the change, says more than one that was merely made.
 
-- [ ] **Step 3: AI_USAGE.md**
+- [x] **Step 3: AI_USAGE.md**
 
 Honest and specific. What to cover: which tools · that the brief was decomposed into a traced requirements analysis *before* any code, and that this conversation produced the spec and this plan · that the work ran test-first, with the scoring fixtures derived from worked examples rather than from the implementation · **where the AI was wrong and how it was caught** — the worked scoring examples were computed with exact thirds and were off by one hundredth once per-answer rounding was decided; the error was found by re-deriving the fixtures with a script before writing the tests · how output was verified (the suite, the adversarial list, a real phone viewport).
 
-- [ ] **Step 4: CLAUDE.md**
+- [x] **Step 4: CLAUDE.md**
 
 Already written on 2026-09-25: root `CLAUDE.md` plus path-scoped `.claude/rules/api.md` and
 `.claude/rules/web.md`. Review it against what actually happened in Phases 4–5: delete lines
 Claude now gets right without being told, and add any correction that had to be made twice.
 Keep the root file well under 200 lines.
 
-- [ ] **Step 5: Final verification before submitting**
+- [ ] **Step 5: Final verification before submitting**  *(blocked: Docker Desktop is not installed here — see Still open)*
 
 ```bash
 git clean -xdn                      # confirm nothing needed is untracked
@@ -3184,7 +3194,7 @@ docker compose up --build           # the reviewer's exact experience
 ```
 Then log in as each of the three roles from the README table, sit a quiz on a 375px viewport, switch to Arabic, and read a report. Only then submit.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
