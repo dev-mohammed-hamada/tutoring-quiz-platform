@@ -92,9 +92,21 @@ upserts by `(question_id, position)` and clears `is_correct` first, which also k
 
 ### Still open
 
-- **`docker compose up` has still never been run**, and Task 19's Step 5 cannot be done without it.
-  Docker Desktop is not installed on this machine. Everything else about the delivery is verified;
-  this is the last unverified claim in the README, and it is the reviewer's first command.
+- **`docker compose up` has still never been run**, and Task 19's Step 5 cannot be done without it:
+  there is no container runtime on this machine at all (no docker, colima or podman). It is the
+  reviewer's first command and the last unverified claim in the README.
+
+  Everything about that path that can be checked without a container has been:
+  - a fresh empty database booted with `npm run build && npm start` migrates, seeds 60 students,
+    4 teachers, a principal and 5 quizzes, serves the SPA and its fonts, and still 404s `/api/*`
+    misses — the same code path compose runs on first boot;
+  - the runtime stage's `npm ci --omit=dev --workspace @quiz/shared --workspace @quiz/api
+    --include-workspace-root` was run against a copy of the lockfile and succeeds;
+  - every `COPY` source in the Dockerfile exists after a build;
+  - `git clean -xdn` removes nothing the build needs.
+
+  What remains genuinely unproven is the container build itself: the base image, the layer copies
+  and compose's own wiring between the two services.
 
 - **`quiz_dev` now has a submitted attempt for `10A-002` on القراءة والفهم**, created by Task 15's
   Step 5 walkthrough. The one-attempt rule means that student cannot sit it again; recreate
