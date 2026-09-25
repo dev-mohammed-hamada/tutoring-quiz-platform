@@ -13,10 +13,9 @@
 
 ## Execution status — read this first
 
-**Updated 2026-09-25, Tasks 1–19 done bar one blocked step.** Everything through Task 19 is written
-and verified: 188 API tests, 29 web tests and 9 end-to-end tests at a 375px viewport, with a clean
-`tsc` and Vite build. The single outstanding item is Task 19's Step 5 — the `docker compose` run —
-which cannot be done on this machine. Work happens on `feat/v1`; merge to `main` with `--no-ff` at each phase boundary so `main`
+**Updated 2026-09-25, Tasks 1–19 complete.** 188 API tests, 29 web tests and 9 end-to-end tests at a
+375px viewport, a clean `tsc` and Vite build, green CI, and `docker compose up --build` verified from
+a destroyed volume — including the whole e2e suite run against the container itself. Work happens on `feat/v1`; merge to `main` with `--no-ff` at each phase boundary so `main`
 is always submittable.
 
 ### Running locally without Docker
@@ -92,21 +91,13 @@ upserts by `(question_id, position)` and clears `is_correct` first, which also k
 
 ### Still open
 
-- **`docker compose up` has still never been run**, and Task 19's Step 5 cannot be done without it:
-  there is no container runtime on this machine at all (no docker, colima or podman). It is the
-  reviewer's first command and the last unverified claim in the README.
-
-  Everything about that path that can be checked without a container has been:
-  - a fresh empty database booted with `npm run build && npm start` migrates, seeds 60 students,
-    4 teachers, a principal and 5 quizzes, serves the SPA and its fonts, and still 404s `/api/*`
-    misses — the same code path compose runs on first boot;
-  - the runtime stage's `npm ci --omit=dev --workspace @quiz/shared --workspace @quiz/api
-    --include-workspace-root` was run against a copy of the lockfile and succeeds;
-  - every `COPY` source in the Dockerfile exists after a build;
-  - `git clean -xdn` removes nothing the build needs.
-
-  What remains genuinely unproven is the container build itself: the base image, the layer copies
-  and compose's own wiring between the two services.
+- ~~`docker compose up` has never been run.~~ **Done 2026-09-25**, after Docker Desktop was
+  installed. From `docker compose down -v`, a full `--build` produced a working stack: the db
+  container healthy, the app migrating and seeding on first boot (65 users, 3 classes, 5 quizzes),
+  the SPA and its fonts served from :3000, `/api/*` misses still 404, and Postgres published on
+  5433. The **entire e2e suite was then run against the container** — all 9 passing, which is what
+  verifies the README's three logins against the delivered artefact rather than a dev server. The
+  volume was destroyed and rebuilt afterwards, so the checked-out state is pristine.
 
 - **`quiz_dev` now has a submitted attempt for `10A-002` on القراءة والفهم**, created by Task 15's
   Step 5 walkthrough. The one-attempt rule means that student cannot sit it again; recreate
@@ -342,7 +333,7 @@ EXPOSE 3000
 CMD ["node", "api/dist/index.js"]
 ```
 
-- [ ] **Step 7: Verify the one command** — ⚠️ OPEN: Docker not installed yet
+- [x] **Step 7: Verify the one command** — done 2026-09-25, see the execution status
 
 Run: `docker compose up --build`
 Then: `curl -s localhost:3000/api/health`
@@ -3185,7 +3176,7 @@ Already written on 2026-09-25: root `CLAUDE.md` plus path-scoped `.claude/rules/
 Claude now gets right without being told, and add any correction that had to be made twice.
 Keep the root file well under 200 lines.
 
-- [ ] **Step 5: Final verification before submitting**  *(blocked: Docker Desktop is not installed here — see Still open)*
+- [x] **Step 5: Final verification before submitting**
 
 ```bash
 git clean -xdn                      # confirm nothing needed is untracked
